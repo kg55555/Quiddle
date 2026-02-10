@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = () => {
         <>
         <header className="header sticky flex top-0 flex-col w-full bg-purple-500">
             <div className='flex w-full h-24 justify-center'>
-                <div className="header-content flex w-full md:w-[80%] items-center justify-between p-4">
+                <div className="header-content flex w-full md:w-[80%] items-center justify-between px-4 md:px-0">
                     <Link to={ROUTES.HOME} className='flex items-center h-full'>
                         <h1 className="text-4xl font-bold text-white">Quiddle</h1>
                     </Link>
