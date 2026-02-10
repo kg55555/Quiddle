@@ -24,7 +24,7 @@ const Signup: React.FC = () => {
   };
 
   return (
-    // Keep gradient background
+    // Background
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-8 lg:p-16 flex items-center justify-center">
       <div className="max-w-4xl w-full flex flex-col lg:flex-row gap-12 lg:gap-20 items-center"> {/* #1, #2 */}
         
@@ -45,7 +45,7 @@ const Signup: React.FC = () => {
         <div className="w-full lg:w-1/2 max-w-md">
           <div className="bg-white rounded-3xl p-8 shadow-xl">
             
-            {/* Keep gradient title */}
+            {/*Card Title*/}
             <h3 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Sign up page
             </h3>
@@ -112,7 +112,7 @@ const Signup: React.FC = () => {
               </div>
             </div>
             
-            {/* Visual buttons */}
+            {/* Create Account Button*/}
             <div className="space-y-3 mb-6">
               <button
                 type="button"
