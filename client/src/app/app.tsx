@@ -2,6 +2,8 @@ import { Route, Routes } from "react-router-dom";
 import Home from "../pages/Home";
 import QuizTake from "../pages/QuizTake";
 import Signup from "../pages/signup";
+import Faq from "../pages/faq";
+
 
 function App() {
   return (
@@ -10,6 +12,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/quiz" element={<QuizTake />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/faq" element={<Faq />} />
         <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>
   );
