@@ -22,7 +22,11 @@ const Header: React.FC<HeaderProps> = () => {
                     <div className='desktop-menu hidden md:flex justify-center items-center'>
                         <div>
                             <ul className="flex space-x-4 text-white">
-                                <li>Features</li>
+                                <li>
+                                    <Link to={ROUTES.FAQ}>
+                                    Features
+                                    </Link>
+                                </li>
                                 <li>About</li>
                             </ul>
                         </div>
