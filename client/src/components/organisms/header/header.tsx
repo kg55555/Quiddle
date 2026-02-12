@@ -27,9 +27,10 @@ const Header: React.FC<HeaderProps> = () => {
                             </ul>
                         </div>
 
-                        <div className="sign-in-button bg-purple-700 text-white rounded-2xl md:px-5 md:py-3 md:ml-4">
-                            <p>Sign In</p>
-                        </div>
+                        <Link to ={ROUTES.SIGNUP} 
+                            className="sign-in-button bg-purple-700 text-white rounded-2xl md:px-5 md:py-3 md:ml-4">
+                            Sign Up
+                        </Link>
                     </div>
                     <div className="mobile-menu md:hidden">
                         <img src={hamburgerIcon} alt="Menu" className="w-12 h-12 invert" onClick={() => setOpen(!open)} />
