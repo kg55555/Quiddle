@@ -27,7 +27,11 @@ const Header: React.FC<HeaderProps> = () => {
                                     Features
                                     </Link>
                                 </li>
-                                <li>About</li>
+                                <li>
+                                    <Link to={ROUTES.QUIZ}>
+                                    Sample Quiz 
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
 
