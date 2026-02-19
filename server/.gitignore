@@ -1,3 +1,5 @@
+.env
+package-lock.json
 # Dependencies
 node_modules/
 /jspm_packages/
