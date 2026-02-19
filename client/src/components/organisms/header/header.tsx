@@ -23,8 +23,8 @@ const Header: React.FC<HeaderProps> = () => {
                         <div>
                             <ul className="flex space-x-4 text-white">
                                 <li>
-                                    <Link to={ROUTES.FAQ}>
-                                    Features
+                                    <Link to={ROUTES.HOME}>
+                                    Home
                                     </Link>
                                 </li>
                                 <li>
