@@ -24,7 +24,6 @@ function Profile() {
   };
 
   const handleUpdate = () => {
-    // Add your update logic here
     console.log("Profile updated:", profileData);
   };
 
