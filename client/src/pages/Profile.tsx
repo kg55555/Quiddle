@@ -12,7 +12,6 @@ function Profile() {
   const [activeTab, setActiveTab] = useState("Profile");
 
   const [profileData, setProfileData] = useState<ProfileProp[]>([
-    { title: "User ID", answer: "current_user_id" },
     { title: "First Name", answer: "current_first_name" },
     { title: "Last Name", answer: "current_last_name" },
   ]);
@@ -92,17 +91,7 @@ function Profile() {
                           </div>
                         ))}
                         
-                        {/* Fixed Email */}
-                        <div className="mb-4 p-3 ">
-                          <h3 className="font-semibold text-gray-700">
-                            Email
-                          </h3>
-                          
-                          <div className="w-full mt-2 p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
-                            Current_Email
-                          </div>
-                          
-                        </div>
+                        
                       </div>
 
                       {/* Update Button */}
