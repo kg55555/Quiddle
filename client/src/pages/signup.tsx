@@ -137,11 +137,43 @@ const Signup: React.FC = () => {
             <Formik
               initialValues={form}
               validationSchema={SignupSchema}
-              onSubmit={(values) => {
-                setIsSubmitting(true);
-                console.log({values});
-                setIsSubmitting(true);
-              }}
+              onSubmit={async (values) => {
+                  setIsSubmitting(true);
+                  try {
+                    const response = await fetch('http://localhost:3001/api/signup', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        firstName: values.firstName,
+                        middleName: values.middleName,
+                        lastName: values.lastName,
+                        institutionID: values.institutionID,
+                        email: values.email,
+                        password: values.password,
+                      }),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.status === 409) {
+                      alert('Email already registered. Try logging in.');
+                    } else if (response.status === 404) {
+                      alert('Institution not found.');
+                    } else if (response.status === 400) {
+                      alert('Please fill in all required fields.');
+                    } else if (data.success) {
+                      alert('Account created successfully!');
+                      window.location.href = '/login';
+                    } else {
+                      alert(data.error || 'Signup failed');
+                    }
+
+                  } catch (err) {
+                    alert('Could not connect to server. Make sure backend is running.');
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
             >
               {({ errors, touched }: FormikProps<FormData>) => (
               <Form>
