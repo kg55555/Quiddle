@@ -3,7 +3,8 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
-
+const nodemailer = require('./util/mailtransporter');
+const signuptemplate = require('./util/signuptemplate');
 const app = express();
 
 // Middleware
@@ -28,6 +29,8 @@ pool.query('SELECT NOW()', (err, res) => {
   }
 });
 
+const verificationURL = process.env.ENVIRONMENT === 'development' ? process.env.FRONTEND_DEVELOPMENT_URL + process.env.EMAIL_VERIFICATION_URL : process.env.PRODUCTION_FRONTEND_URL + process.env.EMAIL_VERIFICATION_URL;
+
 // Signup endpoint
 app.post('/api/signup', async (req, res) => {
   const { fullName, institution, email, password } = req.body;
@@ -36,13 +39,16 @@ app.post('/api/signup', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     
     const result = await pool.query(
-      'INSERT INTO users (full_name, institution, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, email, full_name',
-      [fullName, institution, email, passwordHash]
+      'INSERT INTO users (full_name, institution, email, password_hash, email_validation_string) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, full_name, email_validation_string',
+      [fullName, institution, email, passwordHash, Math.random().toString(36).substring(2, 15)]
     );
-    
+
+    nodemailer.transporter.sendMail(signuptemplate(fullName, email, verificationURL + "/?email=" + result.rows[0].email + "&validationString=" + result.rows[0].email_validation_string));
+
     res.json({ 
       success: true, 
       userId: result.rows[0].id,
+      emailValidationString: result.rows[0].email_validation_string,
       message: 'User created successfully'
     });
   } catch (error) {
@@ -87,6 +93,9 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ error: 'Login failed' });
   }
 });
+
+const mail = require("./routes/mail.js");
+app.use("/api/mail", mail);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

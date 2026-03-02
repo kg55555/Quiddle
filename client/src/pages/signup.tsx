@@ -4,7 +4,7 @@ import Header from "components/organisms/header";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import * as Yup from "yup";
- import {
+import {
    Formik,
    FormikHelpers,
    FormikProps,
@@ -140,7 +140,7 @@ const Signup: React.FC = () => {
               onSubmit={(values) => {
                 setIsSubmitting(true);
                 console.log({values});
-                setIsSubmitting(true);
+                setIsSubmitting(false);
               }}
             >
               {({ errors, touched }: FormikProps<FormData>) => (
