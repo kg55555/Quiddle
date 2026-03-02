@@ -1,126 +1,174 @@
-import Logos from "../components/atoms/logos";
-import Card from "../components/organisms/card";
-import {
-  BeakerIcon,
-  BookmarkIcon,
-  ChevronDownIcon,
-  CubeTransparentIcon,
-  PhoneXMarkIcon,
-  Bars3Icon,
-  PencilIcon,
-  PhotoIcon,
-} from "@heroicons/react/24/outline";
-import Button from "../components/atoms/button";
-import CopyButton from "../components/molecules/copy-button";
+import Footer from "components/organisms/footer";
+import Header from "components/organisms/header";
+import MainBG from "/img/pexels-cottonbro-6333728-lowres.jpg"
+import React, { useState } from "react";
 
-const features = [
-  {
-    name: "Vite 7",
-    description:
-      "Next-generation frontend tooling with lightning-fast HMR and optimized builds.",
-    logo: CubeTransparentIcon,
-    docs: "https://vitejs.dev/",
-  },
-  {
-    name: "React 19",
-    description: "Latest React with improved performance and new features.",
-    logo: PencilIcon,
-    docs: "https://react.dev/",
-  },
-  {
-    name: "TypeScript 5.9",
-    description:
-      "Strict type checking for robust and maintainable code.",
-    logo: BookmarkIcon,
-    docs: "https://www.typescriptlang.org/",
-  },
-  {
-    name: "Tailwind CSS v4",
-    description: "CSS-first utility framework with new directives and improved DX.",
-    logo: PhotoIcon,
-    docs: "https://tailwindcss.com/",
-  },
-  {
-    name: "ESLint 9",
-    description: "Flat config format for modern JavaScript and TypeScript linting.",
-    logo: BeakerIcon,
-    docs: "https://eslint.org/",
-  },
-  {
-    name: "Prettier 3",
-    description: "Opinionated code formatter for consistent code style.",
-    logo: Bars3Icon,
-    docs: "https://prettier.io/",
-  },
-  {
-    name: "Atomic Design",
-    description:
-      "Structured component architecture from atoms to organisms.",
-    logo: PhoneXMarkIcon,
-    docs: "https://bradfrost.com/blog/post/atomic-web-design/",
-  },
-  {
-    name: "Path Aliases",
-    description:
-      "Clean imports using path aliases for components, app, and hooks.",
-    logo: ChevronDownIcon,
-    docs: "https://github.com/vitejs/vite/issues/88#issuecomment-762415200",
-  },
-];
+interface FeatureProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  reverseLayout?: boolean;
+}
 
-function Home() {
+const TargetIcon = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full">
+    <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="4"/>
+    <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="4"/>
+    <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="4"/>
+    <line x1="50" y1="50" x2="85" y2="15" stroke="currentColor" strokeWidth="4"/>
+  </svg>
+);
+
+const QuizIcon = ({ size = 96, color = "currentColor" }) => {
   return (
-    <main>
-      <header className="pt-16 z-10 relative max-w-screen-lg xl:max-w-screen-xl mx-auto">
-        <h3 className="text-2xl sm:text-4xl leading-none font-bold tracking-tight text-purple-200">
-          <span className="text-[gold] opacity-75">Vital</span> @ Vite Template
-        </h3>
-        <h1 className="text-6xl lg:text-7xl leading-none font-extrabold tracking-tight mb-8 sm:mb-10 text-purple-400">
-          React 19 + TypeScript + Tailwind v4
-        </h1>
-        <p className="max-w-screen-lg text-lg sm:text-xl  text-gray-300 font-medium mb-10 sm:mb-11">
-          Bootstrap your web projects faster than ever. Comes with:{" "}
-          <code className="font-mono text-blue-500 font-bold">Tailwind CSS v4</code>
-          , <code className="font-mono text-blue-500 font-bold">Commitlint</code>
-          , <code className="font-mono text-blue-500 font-bold">ESLint</code>,{" "}
-          <code className="font-mono text-blue-500 font-bold">Prettier</code>,{" "}
-          <code className="font-mono text-blue-500 font-bold">lint-staged</code>{" "}
-          and{" "}
-          <code className="font-mono text-blue-500 font-bold">
-            Atomic Design pattern
-          </code>
-          . Configured and ready to go.
-        </p>
-        <div className="absolute top-12 right-12 opacity-10 lg:opacity-50">
-          <Logos.Vite className="w-56 h-56" />
-        </div>
-      </header>
-      <section className="max-w-screen-lg xl:max-w-screen-xl mx-auto">
-        <div className="sm:flex sm:space-x-6 space-y-4 sm:space-y-0 items-center">
-          <a href="https://github.com/jvidalv/vital">
-            <Button>Visit on Github</Button>
-          </a>
-          <CopyButton text="npx degit jvidalv/vital my-app" />
-        </div>
-      </section>
-      <section className="max-w-screen-lg xl:max-w-screen-xl mx-auto grid grid-cols-10 gap-4">
-        {features.map((props, index) => (
-          <div key={index} className="col-span-10 sm:col-span-5">
-            <Card
-              title={props.name}
-              description={props.description}
-              Icon={props.logo}
-              href={props.docs}
-            />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" strokeWidth="1"/>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+};
+
+const Feature: React.FC<FeatureProps> = ({ icon, title, description, reverseLayout = false }) => (
+  <div className={`flex flex-col md:flex-row gap-8 md:items-start items-center ${reverseLayout ? 'md:flex-row-reverse' : ''} md:text-left text-center`}>
+    <div className="shrink-0 w-16 md:w-20 h-16 md:h-20 flex items-center justify-center text-black">
+      {icon}
+    </div>
+    <div className="flex flex-col justify-start">
+      <h3 className="text-3xl md:text-4xl font-semibold text-black mb-3">{title}</h3>
+      <p className="text-xl md:text-2xl text-gray-800 leading-relaxed">{description}</p>
+    </div>
+  </div>
+);
+const Home = () => {
+  const [open1, setOpen1] = useState(false);
+  const [open2, setOpen2] = useState(false);
+  return (
+    <div className="flex flex-col min-h-screen">
+      <main className="flex flex-col flex-1">
+        <section className="intro-section flex flex-col items-center min-h-screen w-full relative">
+          <Header/>
+          <div
+            className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url(" + MainBG + ")", backgroundAttachment: "fixed" }}
+          />
+
+          <div className="absolute inset-0 -z-9 bg-white/80" />
+
+          <div className="flex-1 flex flex-col justify-center items-center md:w-[80%]">
+            
+            <div className="flex flex-col md:w-[60%]">          
+                  {/* Left: Welcome */}
+              <div className="w-full lg:w-1/2 text-center lg:text-left">
+                <h1 className="text-5xl lg:text-7xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6">
+                  Welcome to
+                </h1>
+                <h2 className="text-6xl lg:text-9xl font-black text-gray-900 mb-6">
+                  Quiddle
+                </h2>
+                <p className="text-lg lg:text-xl text-gray-600 max-w-lg">
+                  Join thousands of students mastering their courses!
+                </p>
+              </div>
+
+            </div>
+
+            <div className="mb-30 flex w-full justify-center mt-20">
+              <div className="submit-button w-fit bg-white border-4 border-purple-700 text-purple-600 font-bold text-2xl rounded-2xl md:px-7 md:py-3 md:ml-4">
+                <p>Get Started</p>
+              </div>
+            </div>
+
+
           </div>
-        ))}
-      </section>
-      <footer className="pb-16 max-w-screen-lg xl:max-w-screen-xl mx-auto text-center sm:text-right text-gray-400 font-bold">
-        <a href="https://github.com/jvidalv">
-          Josep Vidal @ {new Date().getFullYear()}
-        </a>
-      </footer>
-    </main>
+
+          <div className="flex flex-col gap-10 px-6 py-10 w-3/5 mx-auto mb-10">
+          <Feature
+            icon={< QuizIcon />}
+            title="What is Quiddle?"
+            description="Quiddle is a free quizzing website built for students.
+                      It is a site where students can create and share quizzes on the same subjects and courses,
+                      helping not only yourself, but other students in the same program!"
+          />
+          </div>
+
+          <div className="flex flex-col gap-10 px-6 py-10 w-3/5 mx-auto mb-40">
+          <Feature
+            icon={<TargetIcon />}
+            title="Our Goal"
+            description="We aim to provide unversity or high school level students a convenient platform to study and learn from one another;
+            A way to allow students of the same program to study together efficiently and effectively."
+            reverseLayout
+          />
+          </div>
+
+
+          {/*FAQ*/}
+          <div className="w-full lg:w-1/2 max-w-md ">
+            <h1 className="flex w-full justify-center font-bold text-2xl">Frequently Asked Questions</h1>
+
+            <div className="bg-white p-6 border rounded-lg mb-10">
+              
+              <h3 className="text-xl font-bold text-center mb-6 text-gray-800">FAQ</h3>
+              
+              {/*FAQ 1 */}
+              <div className="mb-3">
+                <button
+                  onClick={() => setOpen1(!open1)}
+                  className="w-full text-left p-3 border-b text-gray-800 flex justify-between "
+                >
+                  <span>How do I access quizzes?</span>
+                  <span>{open1 ? "-" : "+"}</span>
+                </button >
+                
+                  <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                    open1 ? "max-h-40 opacity-100 p-3" : "max-h-0 opacity-0"}`}>
+                    <p className="text-gray-600">Simply, after logging in, locate the "Quiz" button 
+                      at the top right of the screen and click it. After it redirects you to our Quiz page, 
+                      there will be a variety of quizzes you can browse!
+                    </p>
+                  </div>
+
+              </div>
+
+              {/* FAQ 2 */}
+              <div>
+                <button
+                  onClick={() => setOpen2(!open2)}
+                  className="w-full text-left p-3 border-b text-gray-800 flex justify-between"
+                >
+                  <span>How does it work?</span>
+                  <span>{open2 ? "-" : "+"}</span>
+                </button>
+                <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                    open2 ? "max-h-40 opacity-100 p-3" : "max-h-0 opacity-0"}`}>
+                    <p className="text-gray-600">Once you have created an account, simply sign in and browse or create quzzies. 
+                    Each account can access any quizzes 15 times for free daily, or unlimited access with our premium accounts!
+                    </p>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </section >
+        <section>
+
+        </section>
+        <section>
+
+        </section>
+      </main>
+      <Footer/>
+    </div>
   );
 }
 
