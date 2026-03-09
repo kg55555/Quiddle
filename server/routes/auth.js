@@ -4,6 +4,7 @@ const nodemailer = require('../util/mailtransporter');
 const pool = require('../util/pool');
 const signuptemplate = require('../util/verificationtemplate');
 const bcrypt = require('bcrypt');
+const { signToken, verifyToken } = require('../util/token');
 
 const router = express.Router();
 
@@ -79,15 +80,34 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
+    const token = signToken({ userId: user.id, email: user.email });
+
     console.log(`Login successful for: ${user.id}`);
     res.json({ 
-      success: true, 
+      success: true,
+      token: token, 
       userId: user.id,
-      fullName: user.full_name 
+      fullName: user.full_name,
+      email: user.email 
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+router.get('/verify-token', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    const token = authHeader.split(' ')[1];
+    const userData = verifyToken(token);
+    res.status(201).json({ success: true,});
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(401).json({ success: false, error: 'Invalid or expired token' });
   }
 });
 

@@ -1,5 +1,7 @@
 .env
 package-lock.json
+/privatekey/
+/publickey/
 # Dependencies
 node_modules/
 /jspm_packages/
