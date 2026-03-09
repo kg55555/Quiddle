@@ -1,8 +1,18 @@
 import type {LoginInfo} from "../components/molecules/login-info/login-info";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Header from "components/organisms/header";
+import Footer from "components/organisms/footer";
+
 
 function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectTo = location.state?.from || '/';
+
   const [loginInfo, setLoginInfo] = useState({
     id: 0,
     email: "",
@@ -35,13 +45,12 @@ function Login() {
       });
 
       const data = await response.json();
-
+      console.log(data);
       if (response.status === 401) {
         alert('Invalid email or password.');
       } else if (data.success) {
-        localStorage.setItem('userId', String(data.userId));
-        localStorage.setItem('fullName', data.fullName);
-        window.location.href = '/';
+        login(data.token, data.userId, data.fullName, data.email);
+        navigate(redirectTo, { replace: true });
       } else {
         alert(data.error || 'Login failed');
       }
@@ -52,6 +61,8 @@ function Login() {
   }
 
   return (
+    <>
+    <Header />
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white rounded-3xl p-8 shadow-xl">
 
@@ -97,6 +108,8 @@ function Login() {
 
       </div>
     </div>
+    <Footer />
+    </>
   );
 }
 

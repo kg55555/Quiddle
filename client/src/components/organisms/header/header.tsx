@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { use, useState } from 'react';
 import { ROUTES } from '../../../utils/paths';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import hamburgerIcon from '/icons/hamburger.svg';
+import { useAuth } from '../../../context/AuthContext';
 
 interface HeaderProps {
     title?: string;
@@ -10,6 +11,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = () => {
     const [open, setOpen] = useState(false)
+    const { token, logout } = useAuth();
+    const navigate = useNavigate();
 
     return (
         <>
@@ -28,17 +31,28 @@ const Header: React.FC<HeaderProps> = () => {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to={ROUTES.QUIZ}>
-                                    Sample Quiz 
+                                    <Link to={ROUTES.QUIZCREATE}>
+                                    Create Quiz 
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to={ROUTES.PROFILE}>
+                                    Profile
                                     </Link>
                                 </li>
                             </ul>
                         </div>
-
+                        {(token === null || token === undefined) && (
                         <Link to ={ROUTES.SIGNUP} 
                             className="sign-in-button bg-purple-700 text-white rounded-2xl md:px-5 md:py-3 md:ml-4">
                             Sign Up
                         </Link>
+                        )}
+                        {token !== null && token !== undefined && (
+                            <div className="sign-out-button bg-purple-700 text-white rounded-2xl md:px-5 md:py-3 md:ml-4" onClick={() => {logout(); navigate(ROUTES.HOME);}}>
+                                Log Out
+                            </div>
+                        )}
                     </div>
                     <div className="mobile-menu md:hidden">
                         <img src={hamburgerIcon} alt="Menu" className="w-12 h-12 invert" onClick={() => setOpen(!open)} />
@@ -52,9 +66,15 @@ const Header: React.FC<HeaderProps> = () => {
                     <Link to={ROUTES.HOME} className="block px-4 py-3 text-white">
                         Home
                     </Link>
-                    <Link to={ROUTES.QUIZ} className="block px-4 py-3 text-white">
-                        Quiz
+                    <Link to={ROUTES.QUIZCREATE} className="block px-4 py-3 text-white">
+                        Create Quiz
                     </Link>
+                    {(token === null || token === undefined) && (<Link to={ROUTES.SIGNUP} className="block px-4 py-3 text-white">
+                        Sign Up
+                    </Link>)}
+                    {token !== null && token !== undefined && (<div className="block px-4 py-3 text-white" onClick={() => {logout(); navigate(ROUTES.HOME);}}>
+                        Log Out
+                    </div>)}
                 </nav>
             </div>
         </header>

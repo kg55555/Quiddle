@@ -31,15 +31,15 @@ const VerifyEmail: React.FC = () => {
 
                 console.log('Verification response:', response);
 
-                // if (response.ok) {
-                //     // Redirect to home after successful verification
-                //     navigate('/');
-                // } else {
-                //     navigate('/');
-                // }
+                if (response.ok) {
+                    // Redirect to home after successful verification
+                    navigate('/');
+                } else {
+                    navigate('/');
+                }
             } catch (error) {
                 console.error('Email verification failed:', error);
-                // navigate('/');
+                navigate('/');
             }
         };
 
