@@ -1,6 +1,7 @@
 const express = require('express');
 require('dotenv').config({path: '../.env'});
 const nodemailer = require('../util/mailtransporter');
+const pool = require('../util/pool');
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ const message = {
 
 router.get('/send-test-email', async (req, res) => {
   try {
-    const info = await nodemailer.transporter.sendMail(message);
+    const info = await nodemailer.sendMail(message);
     console.log('Email sent:', info.response);
     res.json({ success: true, message: 'Test email sent successfully' });
   } catch (error) {
@@ -24,17 +25,18 @@ router.get('/send-test-email', async (req, res) => {
   }
 });
 
-router.get('/verify-email/', async (req, res) => {
-  const { email, validationString } = req.query;
+router.post('/verify-email', async (req, res) => {
+
   try {
+    const { email, validationString } = req.body;
     const result = await pool.query(
-      'UPDATE users SET email_verified = TRUE WHERE email = $1 AND email_validation_string = $2 RETURNING id',
+      'UPDATE users SET email_validated = TRUE WHERE email = $1 AND email_validation_string = $2 RETURNING id',
       [email, validationString]
     );
     if (result.rowCount === 0) {
       return res.status(400).json({ success: false, message: 'Invalid validation string' });
     }
-    res.json({ success: true, message: 'Email verified successfully' });
+    res.status(200).json({ success: true, message: 'Email verified successfully' });
   } catch (error) {
     console.error('Email verification error:', error);
     res.status(500).json({ success: false, error: 'Email verification failed' });

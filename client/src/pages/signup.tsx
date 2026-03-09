@@ -140,7 +140,7 @@ const Signup: React.FC = () => {
               onSubmit={async (values) => {
                   setIsSubmitting(true);
                   try {
-                    const response = await fetch('http://localhost:3001/api/signup', {
+                    const response = await fetch(import.meta.env.VITE_APP_BACKEND_URL + '/api/auth/signup', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
@@ -169,6 +169,7 @@ const Signup: React.FC = () => {
                     }
 
                   } catch (err) {
+                    console.log(err);
                     alert('Could not connect to server. Make sure backend is running.');
                   } finally {
                     setIsSubmitting(false);
