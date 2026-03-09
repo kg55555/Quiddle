@@ -109,14 +109,14 @@ function Profile() {
                   {activeTab === "Quiz History" && (
                     <div>
                       <h2 className="text-lg font-bold mb-2">Quiz History</h2>
-                      <p>Quiz History content here</p>
+                      <p>Feature coming soon!</p>
                     </div>
                   )}
 
                   {activeTab === "Created Quizzes" && (
                     <div>
                       <h2 className="text-lg font-bold mb-2">Created Quizzes</h2>
-                      <p>Created Quizzes content here</p>
+                      <p>Feature coming soon!</p>
                     </div>
                   )}
 
