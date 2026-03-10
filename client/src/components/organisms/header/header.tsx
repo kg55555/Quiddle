@@ -11,7 +11,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = () => {
     const [open, setOpen] = useState(false)
-    const { token, logout, userFullName } = useAuth();  // ← added userFullName
+    const { token, logout, userFullName } = useAuth();
     const navigate = useNavigate();
 
     return (
@@ -36,19 +36,24 @@ const Header: React.FC<HeaderProps> = () => {
                                 </li>
                             </ul>
                         </div>
-						
-						{/*login token doesnt exist*/}
+
+                        {/*login token doesnt exist*/}
                         {(token === null || token === undefined) && (
-                            <Link to={ROUTES.SIGNUP}
-                                className="sign-in-button bg-purple-700 text-white rounded-2xl md:px-5 md:py-3 md:ml-4">
-                                Sign Up
-                            </Link>
+                            <div className="flex items-center gap-3 md:ml-4">
+                                <Link to={ROUTES.LOGIN}
+                                    className="text-white font-medium">
+                                    Login
+                                </Link>
+                                <Link to={ROUTES.SIGNUP}
+                                    className="sign-in-button bg-purple-700 text-white rounded-2xl md:px-5 md:py-3">
+                                    Sign Up
+                                </Link>
+                            </div>
                         )}
 
-						{/*login token exists*/}
+                        {/*login token exists*/}
                         {token !== null && token !== undefined && (
                             <div className="flex items-center gap-3 md:ml-4">
-                                {/* ← User's name displayed here */}
                                 <span className="text-white font-medium">
                                     Hi, {userFullName}! 👋
                                 </span>
@@ -76,14 +81,20 @@ const Header: React.FC<HeaderProps> = () => {
                     <Link to={ROUTES.QUIZCREATE} className="block px-4 py-3 text-white">
                         Create Quiz
                     </Link>
+                    {/*login token doesnt exist*/}
                     {(token === null || token === undefined) && (
-                        <Link to={ROUTES.SIGNUP} className="block px-4 py-3 text-white">
-                            Sign Up
-                        </Link>
+                        <>
+                            <Link to={ROUTES.LOGIN} className="block px-4 py-3 text-white">
+                                Login
+                            </Link>
+                            <Link to={ROUTES.SIGNUP} className="block px-4 py-3 text-white">
+                                Sign Up
+                            </Link>
+                        </>
                     )}
+                    {/*login token exists*/}
                     {token !== null && token !== undefined && (
                         <>
-                            {/* ← Also show name in mobile menu */}
                             <span className="block px-4 py-3 text-white font-medium">
                                 Hi, {userFullName}! 👋
                             </span>
