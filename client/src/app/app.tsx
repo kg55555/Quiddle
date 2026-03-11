@@ -5,6 +5,7 @@ import QuizCreate from "../pages/QuizCreate";
 import Signup from "../pages/signup";
 import Login from "../pages/Login";
 import Profile from "../pages/Profile";
+import Hub from "../pages/Hub";
 import VerifyEmail from "../pages/VerifyEmail";
 import ProtectedRoute from "../components/organisms/protectedroute/ProtectedRoute";
 
@@ -22,6 +23,7 @@ function App() {
         // Protected routes
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/quizcreate" element={<ProtectedRoute><QuizCreate /></ProtectedRoute>} />
+        <Route path="/hub" element={<Hub />} />
 
         <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>
