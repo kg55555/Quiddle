@@ -1,4 +1,4 @@
-const { verifyToken } = require('../util/tokens');
+const { verifyToken } = require('../util/token');
 
 const authenticate = (req, res, next) => {
 try {
