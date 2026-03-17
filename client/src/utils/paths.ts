@@ -8,5 +8,6 @@ export const ROUTES = {
   VERIFYEMAIL: "/verify-email",
   PROFILE: "/profile",
   QUIZCREATE: "/quizcreate",
+  QUIZEDIT: '/quizedit',
   NOTFOUND: "*",
 } as const

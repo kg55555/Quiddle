@@ -1,7 +1,8 @@
 import Footer from 'components/organisms/footer';
 import Header from 'components/organisms/header';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useParams, useNavigate } from 'react-router-dom';
 
 
 interface QuizCreateProps {}
@@ -14,12 +15,15 @@ type Question = {
     options: string[];
     correctAnswers: number[]; // Stores indices of correct options
 };
-
 const QuizCreate: React.FC<QuizCreateProps> = () => {
-	
-	const { token } = useAuth(); //token for logging in
-	
+
+    const { token } = useAuth(); //token for logging in
+    const { quizId } = useParams(); // undefined on /quiz-create, set on /quiz-edit/:quizId
+    const navigate = useNavigate();
+    const isEdit = !!quizId;
+
     const [loading, setLoading] = useState(false);
+    const [fetchLoading, setFetchLoading] = useState(isEdit); // true only in edit mode, avoids flash of empty form
     const [quizName, setQuizName] = useState("New Quiz");
     const [courseName, setCourseName] = useState("");
     const [description, setDescription] = useState("");
@@ -28,6 +32,57 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
     const [currentType, setCurrentType] = useState<'MC' | 'T/F' | 'SA'>('MC');
     const [currentOptions, setCurrentOptions] = useState<string[]>(["", "", "", ""]);
     const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
+
+    // In edit mode, fetch the existing quiz and prefill all form state
+    useEffect(() => {
+        if (!isEdit) return;
+
+        fetch(`/api/quizzes/${quizId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch');
+                return res.json();
+            })
+            .then(data => {
+                setQuizName(data.name);
+                setCourseName(data.course_name ?? "");
+                setDescription(data.description ?? "");
+
+                // Map API question shape back to local Question type
+                const loaded: Question[] = data.questions.map((q: any, idx: number) => ({
+                    id: idx + 1,
+                    question: q.question_text,
+                    type: q.type,
+                    options: q.answers.map((a: any) => a.answer_text),
+                    correctAnswers: q.answers
+                        .map((a: any, i: number) => (a.is_correct ? i : -1))
+                        .filter((i: number) => i !== -1),
+                }));
+                setQuestions(loaded);
+            })
+            .catch(() => {
+                alert("Failed to load quiz for editing");
+                navigate('/hub'); // Don't leave user on a blank form
+            })
+            .finally(() => setFetchLoading(false));
+    }, [quizId, isEdit, token]);
+
+    // Prevent flash of empty "New Quiz" form while edit data is loading
+    if (fetchLoading) {
+        return (
+            <>
+                <Header />
+                <div className="flex justify-center items-center flex-grow py-20">
+                    <p className="text-gray-500">Loading quiz...</p>
+                </div>
+                <Footer />
+            </>
+        );
+    }
+	
+	
+	// rest is create quiz code, reused for edit quiz 
 
     // when the question type changes, reset the options
     const handleTypeChange = (type: 'MC' | 'T/F' | 'SA') => {
@@ -44,8 +99,8 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
         }
     };
 
-	// Copy the array first so we don't modify state directly,
-	// then update the value at the given index
+    // Copy the array first so we don't modify state directly,
+    // then update the value at the given index
     const handleOptionChange = (index: number, value: string) => {
         const newOptions = [...currentOptions];
         newOptions[index] = value;
@@ -65,11 +120,11 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
 
     // Strips non-alphanumeric characters and enforces LETTERS followed by NUMBERS format (e.g. MATH101)
     const handleCourseNameChange = (value: string) => {
-        const raw = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-        if (/^[A-Z]*[0-9]*$/.test(raw)) {
-            setCourseName(raw);
-        }
-    };
+		const raw = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+		if (raw === '' || /^[A-Z]+[0-9]*$/.test(raw)) {
+			setCourseName(raw);
+		}
+	};
 
     // Validates the current question form and appends it to the questions list
     const handleAddQuestion = () => {
@@ -95,11 +150,10 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
         }
 
         // MC and T/F require at least one correct answer to be selected
-		if ((currentType === 'MC' || currentType === 'T/F') && correctAnswers.length === 0) {
-			alert("Please select at least one correct answer");
-			return;
-		}
-
+        if ((currentType === 'MC' || currentType === 'T/F') && correctAnswers.length === 0) {
+            alert("Please select at least one correct answer");
+            return;
+        }
 
         const newQuestion: Question = {
             id: questions.length + 1,
@@ -125,6 +179,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
     };
 
     // Validates and submits the quiz to the API
+    // Uses POST for new quizzes and PUT for edits — determined by whether quizId exists in the URL
     const handleSaveQuiz = async () => {
         if (!quizName.trim()) {
             alert("Please enter a quiz name");
@@ -152,24 +207,23 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
 
         try {
             setLoading(true);
-            const response = await fetch('/api/quizzes', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(payload),
-            });
+            const response = await fetch(
+                isEdit ? `/api/quizzes/${quizId}` : '/api/quizzes',
+                {
+                    method: isEdit ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload),
+                }
+            );
 
             if (!response.ok) throw new Error('Failed to save quiz');
 
-            alert("Quiz saved successfully!");
+            // Return to hub after saving — works for both create and edit
+            navigate('/hub');
 
-            // Reset the entire form after a successful save
-            setQuizName("New Quiz");
-            setCourseName("");
-            setDescription("");
-            setQuestions([]);
         } catch (error) {
             alert("Something went wrong. Please try again.");
         } finally {
@@ -194,7 +248,8 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
             <Header />
             <div className="quiz-create w-full flex justify-center">
                 <div className='flex flex-col md:w-[80%] mb-10'>
-                    <h1 className='text-3xl font-bold mb-4'>Quiz Creation</h1>
+                    {/* Title reflects whether the user is creating or editing */}
+                    <h1 className='text-3xl font-bold mb-4'>{isEdit ? 'Edit Quiz' : 'Quiz Creation'}</h1>
 
                     {/* Quiz Name Input */}
                     <div className='mb-6'>
@@ -406,6 +461,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                     )}
 
                     {/* Submit Quiz Button — only shown once at least one question exists */}
+                    {/* Label changes based on mode: Save Changes (edit) vs Save Quiz (create) */}
                     {questions.length > 0 && (
                         <div className='flex justify-end mt-6'>
                             <button
@@ -413,7 +469,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                                 disabled={loading}
                                 className="submit-button w-fit bg-purple-700 text-white rounded-2xl md:px-5 md:py-3 hover:bg-purple-800 transition disabled:opacity-50"
                             >
-                                <p>{loading ? 'Saving...' : 'Save Quiz'}</p>
+                                <p>{loading ? 'Saving...' : isEdit ? 'Save Changes' : 'Save Quiz'}</p>
                             </button>
                         </div>
                     )}
