@@ -11,23 +11,23 @@ import ProtectedRoute from "../components/organisms/protectedroute/ProtectedRout
 
 
 function App() {
-  return (
+    return (
+        <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/quiz" element={<QuizTake />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/quiz" element={<QuizTake />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
+            {/* Protected routes */}
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/hub" element={<ProtectedRoute><Hub /></ProtectedRoute>} />
+            <Route path="/quizcreate" element={<ProtectedRoute><QuizCreate /></ProtectedRoute>} />
+            <Route path="/quizedit/:quizId" element={<ProtectedRoute><QuizCreate /></ProtectedRoute>} />
 
-        // Protected routes
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/quizcreate" element={<ProtectedRoute><QuizCreate /></ProtectedRoute>} />
-        <Route path="/hub" element={<Hub />} />
-
-        <Route path="*" element={<div>404 Not Found</div>} />
-      </Routes>
-  );
+            <Route path="*" element={<div>404 Not Found</div>} />
+        </Routes>
+    );
 }
 
 export default App;

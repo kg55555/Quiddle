@@ -11,7 +11,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = () => {
     const [open, setOpen] = useState(false)
-    const { token, logout, userFullName } = useAuth();
+    const { token, logout, userFirstName } = useAuth();
     const navigate = useNavigate();
 
     return (
@@ -96,7 +96,7 @@ const Header: React.FC<HeaderProps> = () => {
                     {token !== null && token !== undefined && (
                         <>
                             <span className="block px-4 py-3 text-white font-medium">
-                                Hi, {userFullName}! 👋
+                                Hi, {userFirstName}! 👋
                             </span>
                             <div
                                 className="block px-4 py-3 text-white cursor-pointer"

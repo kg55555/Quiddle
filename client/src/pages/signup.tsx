@@ -1,4 +1,4 @@
-// pages/signup.tsx - Basic Quizzle signup
+// pages/signup.tsx - Quiddle signup
 import Footer from "components/organisms/footer";
 import Header from "components/organisms/header";
 import React, { useState } from "react";
@@ -15,7 +15,7 @@ import {
 
 interface FormData {
   firstName: string;
-  middleName?: string;
+  middleName?: string; //? means optional
   lastName: string;
   institutionID: string;
   email: string;

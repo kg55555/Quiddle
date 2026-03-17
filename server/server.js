@@ -20,6 +20,8 @@ app.use("/api/mail", mail);
 const createQuiz = require("./routes/createQuiz.js");
 app.use("/api/quizzes", createQuiz);
 
+const user = require("./routes/user.js");
+app.use("/api/user", user);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
