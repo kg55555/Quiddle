@@ -210,7 +210,7 @@ router.post('/', authenticate, async (req, res) => {
             [quiz_id, userId, score, Object.keys(questionsMap).length]
         );
 
-        // Save individual question responses
+        // Save each question responses
         for (const userAnswer of answers) {
             const question = questionsMap[userAnswer.questionId];
             if (question) {

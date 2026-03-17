@@ -131,7 +131,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
     };
 
     const handleSubmit = async () => {
-        if (!window.confirm('Are you sure you want to submit? You cannot change your answers after submission.')) {
+        if (!window.confirm('Ready to submit? You cannot change your answers after submission.')) {
             return;
         }
 
@@ -199,7 +199,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
         );
     }
 
-    // Results screen
+    // Results page
     if (submitted && results) {
         return (
             <>
@@ -274,7 +274,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
         );
     }
 
-    // Quiz taking screen
+    // Quiz taking page
     return (
         <>
             <Header />
