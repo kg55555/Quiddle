@@ -10,7 +10,7 @@ router.get('/me', authenticate, async (req, res) => {
 
     try {
         const result = await pool.query(
-            'SELECT first_name, last_name, email FROM users WHERE user_id = $1',
+            'SELECT first_name, middle_name, last_name, email FROM users WHERE id = $1',
             [userId]
         );
         if (result.rows.length === 0) {
@@ -26,12 +26,12 @@ router.get('/me', authenticate, async (req, res) => {
 // PUT /api/user/me — update the logged-in user's name
 router.put('/me', authenticate, async (req, res) => {
     const userId = req.user.userId;
-    const { first_name, last_name } = req.body;
+    const { first_name, middle_name, last_name } = req.body;
 
     try {
         await pool.query(
-            'UPDATE users SET first_name = $1, last_name = $2 WHERE user_id = $3',
-            [first_name, last_name, userId]
+            'UPDATE users SET first_name = $1, middle_name = $2, last_name = $3 WHERE id = $4',
+			[first_name, middle_name || null, last_name, userId]
         );
         res.json({ success: true });
     } catch (error) {

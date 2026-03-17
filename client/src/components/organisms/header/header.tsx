@@ -55,7 +55,7 @@ const Header: React.FC<HeaderProps> = () => {
                         {token !== null && token !== undefined && (
                             <div className="flex items-center gap-3 md:ml-4">
                                 <span className="text-white font-medium">
-                                    Hi, {userFullName}! 👋
+                                    Hi, {userFirstName}! 👋
                                 </span>
                                 <div
                                     className="sign-out-button bg-purple-700 text-white rounded-2xl md:px-5 md:py-3 cursor-pointer"

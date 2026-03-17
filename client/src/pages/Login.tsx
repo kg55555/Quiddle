@@ -49,7 +49,7 @@ function Login() {
       if (response.status === 401) {
         alert('Invalid email or password.');
       } else if (data.success) {
-        login(data.token, data.userId, data.first_Name, data.last_name, data.email);
+        login(data.token, data.userId, data.firstName, data.lastName, data.email);
         navigate(redirectTo, { replace: true });
       } else {
         alert(data.error || 'Login failed');

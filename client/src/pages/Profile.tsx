@@ -19,11 +19,16 @@ function Profile() {
 
     const [profileData, setProfileData] = useState<ProfileProp[]>([
         { title: "First Name", key: "first_name", answer: "" },
+		{ title: "Middle Name", key: "middle_name", answer: "" },
         { title: "Last Name", key: "last_name", answer: "" },
     ]);
 
     // Fetch real user data on mount
     useEffect(() => {
+		
+		if (!token) return; // don't fetch if not logged in
+
+		
         fetch('/api/user/me', {
             headers: { Authorization: `Bearer ${token}` }
         })
@@ -34,6 +39,7 @@ function Profile() {
             .then(data => {
                 setProfileData([
                     { title: "First Name", key: "first_name", answer: data.first_name ?? "" },
+					{ title: "Middle Name", key: "middle_name", answer: data.middle_name ?? "" },
                     { title: "Last Name", key: "last_name", answer: data.last_name ?? "" },
                 ]);
             })
