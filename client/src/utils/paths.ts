@@ -5,6 +5,7 @@ export const ROUTES = {
   FAQ: "/faq",
   SIGNUP: "/signup",
   LOGIN: "/login",
+  HUB: "/hub",
   VERIFYEMAIL: "/verify-email",
   PROFILE: "/profile",
   QUIZCREATE: "/quizcreate",
