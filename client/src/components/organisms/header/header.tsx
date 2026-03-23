@@ -54,7 +54,7 @@ const Header: React.FC<HeaderProps> = () => {
                         {/*login token exists*/}
                         {token !== null && token !== undefined && (
                             <div className="flex items-center gap-3 md:ml-4">
-                                <Link to={ROUTES.LOGIN}
+                                <Link to={ROUTES.HUB}
                                     className="text-white">
                                     Hub
                                 </Link>
@@ -99,7 +99,7 @@ const Header: React.FC<HeaderProps> = () => {
                     {/*login token exists*/}
                     {token !== null && token !== undefined && (
                         <>
-                            <Link to={ROUTES.LOGIN}
+                            <Link to={ROUTES.HUB}
                                     className="block px-4 py-3 text-white">
                                     Hub
                             </Link>
