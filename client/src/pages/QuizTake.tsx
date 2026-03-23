@@ -95,6 +95,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
             const data = await response.json();
             setQuizName(data.quiz.name);
             setQuizQuestions(data.quiz.questions);
+            console.log(quizQuestions);
 
             // Initialize answers object
             const initialAnswers: Answers = {};
