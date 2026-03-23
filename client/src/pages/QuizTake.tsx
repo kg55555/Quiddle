@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 interface QuizTakeProps {}
 
 type Answers = {
-  [questionId: number]: number[]; // Array of answer IDs (for multiple choice support)
+  [questionId: string]: string[]; // Array of answer IDs (for multiple choice support)
 };
 
 type AnswerOption = {
@@ -35,6 +35,8 @@ type QuizData = {
 
 type QuestionResult = {
     questionId: number;
+    userAnswerText: string;
+    correctAnswerText: string;
     questionText: string;
     isCorrect: boolean;
 };
@@ -95,8 +97,6 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
             const data = await response.json();
             setQuizName(data.quiz.name);
             setQuizQuestions(data.quiz.questions);
-            console.log(quizQuestions);
-
             // Initialize answers object
             const initialAnswers: Answers = {};
             data.quiz.questions.forEach((q: Question) => {
@@ -111,24 +111,29 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
         }
     };
 
-    const handleChange = (questionId: number, answerId: number, isMultiple: boolean) => {
+    const handleChange = (questionId: number, answer: string, textValue: string, isMultiple: boolean) => {
         setAnswers((prev) => {
             const updated = { ...prev };
             
             if (isMultiple) {
                 // For multiple choice, toggle answer in/out
-                if (updated[questionId].includes(answerId)) {
-                    updated[questionId] = updated[questionId].filter(id => id !== answerId);
+                if (updated[questionId].includes(answer)) {
+                    updated[questionId] = updated[questionId].filter(existing_answer => existing_answer !== answer);
                 } else {
-                    updated[questionId].push(answerId);
+                    updated[questionId] = [...updated[questionId], answer];
                 }
             } else {
                 // For single choice, replace answer
-                updated[questionId] = [answerId];
+                if (textValue) {
+                    updated[questionId] = [textValue.trim()];
+                } else {
+                    updated[questionId] = [answer];
+                }
             }
             
             return updated;
         });
+        console.log(`Current answers state:`, answers);
     };
 
     const handleSubmit = async () => {
@@ -140,10 +145,10 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
             setLoading(true);
 
             const payload = {
-                quizId,
-                answers: Object.entries(answers).map(([questionId, answerIds]) => ({
+                quiz_id: quizId,
+                answers: Object.entries(answers).map(([questionId, answerTexts]) => ({
                     questionId: parseInt(questionId),
-                    answerIds
+                    answerTexts
                 }))
             };
 
@@ -242,7 +247,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
                                     <div className='flex mb-4 justify-between items-start'>
                                         <div className='flex flex-1'>
                                             <div className='py-2 pr-2'>
-                                                <p className='font-bold'>{idx + 1}.</p>
+                                                <p className='font-bold'>{idx + 1}. {quizQuestions[idx]?.description || 'Question not found'}</p>
                                             </div>
                                             <div className='flex-1'>
                                                 <h4 className='font-semibold text-gray-800'>{result.questionText}</h4>
@@ -256,6 +261,11 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
                                             </div>
                                         </div>
                                     </div>
+                                    <div className='ml-10'>
+                                        <p className='text-sm text-gray-600 mb-1'><span className='font-semibold'>Your Answer:</span> {result.userAnswerText}</p>
+                                        <p className='text-sm text-gray-600'><span className='font-semibold'>Correct Answer:</span> {result.correctAnswerText}</p>
+                                    </div>
+
                                 </div>
                             ))}
                         </div>
@@ -287,7 +297,19 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
                             // Check if question has multiple correct answers
                             const correctAnswerCount = quiz.answers.filter(a => a.is_correct).length;
                             const isMultiple = correctAnswerCount > 1;
-
+                            const quizType = quiz.type;
+                            let questionInput: string;
+                            if (quizType === 'T/F') {
+                                questionInput = 'radio';
+                            } else if (quizType === 'SA') {
+                                questionInput = 'text';
+                            } else if (quizType === 'MC') {
+                                if (isMultiple) {
+                                    questionInput = 'checkbox';
+                                } else {
+                                    questionInput = 'radio';
+                                }
+                            }
                             return (
                                 <div key={quiz.question_id} className='quiz-question flex flex-col mb-10'>
                                     <div className='flex mb-4'>
@@ -302,18 +324,23 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
                                     {isMultiple && (
                                         <p className='text-xs text-gray-500 ml-10 mb-2 italic'>Select all that apply</p>
                                     )}
-
                                     {quiz.answers.map((answer) => (
                                         <label key={answer.answer_id} className='flex ml-10 mb-2 items-center'>
                                             <input
-                                                type={isMultiple ? 'checkbox' : 'radio'}
+                                                type={questionInput}
                                                 name={`question-${quiz.question_id}`}
-                                                checked={answers[quiz.question_id].includes(answer.answer_id)}
-                                                onChange={() => handleChange(quiz.question_id, answer.answer_id, isMultiple)}
+                                                checked={answers[quiz.question_id].includes(answer.answer_description)}
+                                                value={answers[quiz.question_id] || ''}
+                                                onChange={(e) => {
+                                                    handleChange(quiz.question_id, answer.answer_description, questionInput === 'text' ? e.target.value : '', isMultiple);
+                                                }}
                                             />
-                                            <div className='pl-2'>
-                                                <p>{answer.answer_description}</p>
-                                            </div>
+                                            {questionInput != 'text' && (
+                                                <div className='pl-2'>
+                                                    <p>{answer.answer_description}</p>
+                                                </div>
+                                            )}
+
                                         </label>
                                     ))}
                                 </div>

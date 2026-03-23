@@ -4,8 +4,6 @@ package-lock.json
 # Dependencies
 node_modules/
 /jspm_packages/
-privatekey/
-publickey/
 
 # Optional npm cache directory
 .npm

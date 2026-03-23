@@ -97,6 +97,8 @@ router.post('/', authenticate, async (req, res) => {
     const { quiz_id, answers } = req.body;
     const userId = req.user.userId;
 
+    console.log(`User ${userId} is submitting quiz ${quiz_id} with answers:`, answers);
+
     if (!quiz_id || !answers || !Array.isArray(answers)) {
         return res.status(400).json({ 
             success: false, 
@@ -169,30 +171,32 @@ router.post('/', authenticate, async (req, res) => {
 
         answers.forEach(userAnswer => {
             const question = questionsMap[userAnswer.questionId];
+  
             if (!question) return;
 
-            const userAnswerIds = userAnswer.answerIds.sort((a, b) => a - b);
             const correctAnswerIds = question.correctAnswers.sort((a, b) => a - b);
+            const correctAnswerDescriptions = question.allAnswers
+                .filter(a => correctAnswerIds.includes(a.answer_id))
+                .map(a => a.answer_description).sort();
 
             // Check if answers match exactly (if only select 1 correct answer out of multiple, still results in 0)
-            const isCorrect = 
-                userAnswerIds.length === correctAnswerIds.length &&
-                userAnswerIds.every((id, idx) => id === correctAnswerIds[idx]);
+            console.log(userAnswer.answerTexts, correctAnswerDescriptions);
+            const isCorrect = userAnswer.answerTexts.length === correctAnswerDescriptions.length && userAnswer.answerTexts.every((text, idx) => text.toLowerCase() === correctAnswerDescriptions[idx].toLowerCase());
 
             if (isCorrect) {
                 score++;
             }
 
+
             // Get answer text
-            const userAnswerText = userAnswerIds
-                .map(id => question.allAnswers.find(a => a.answer_id === id)?.answer_description)
-                .filter(Boolean)
+            const userAnswerText = userAnswer.answerTexts
                 .join(', ') || 'Not answered';
 
             const correctAnswerText = correctAnswerIds
                 .map(id => question.allAnswers.find(a => a.answer_id === id)?.answer_description)
                 .filter(Boolean)
                 .join(', ');
+            
 
             detailedResults.push({
                 questionId: question.question_id,
@@ -200,14 +204,15 @@ router.post('/', authenticate, async (req, res) => {
                 correctAnswerText,
                 isCorrect
             });
+            console.log(detailedResults);
         });
 
         // Save submission to database (for quiz_taken)
         const submissionResult = await client.query(
-            `INSERT INTO quiz_taken (quiz_id, user_id, score, total_questions)
-             VALUES ($1, $2, $3, $4)
-             RETURNING submission_id`,
-            [quiz_id, userId, score, Object.keys(questionsMap).length]
+            `INSERT INTO quizzes_taken (quiz_id, taken_by, score_achieved)
+             VALUES ($1, $2, $3)
+             RETURNING attempt_id`,
+            [quiz_id, userId, score]
         );
 
         // Save each question responses
@@ -215,9 +220,9 @@ router.post('/', authenticate, async (req, res) => {
             const question = questionsMap[userAnswer.questionId];
             if (question) {
                 await client.query(
-                    `INSERT INTO submission_responses (submission_id, question_id, answer_ids)
+                    `INSERT INTO attempted_questions (attempt_id, question_id, answer_value)
                      VALUES ($1, $2, $3)`,
-                    [submissionResult.rows[0].submission_id, userAnswer.questionId, JSON.stringify(userAnswer.answerIds)]
+                    [submissionResult.rows[0].attempt_id, userAnswer.questionId, userAnswer.answerTexts]
                 );
             }
         }
@@ -228,6 +233,7 @@ router.post('/', authenticate, async (req, res) => {
             success: true,
             results: {
                 submissionId: submissionResult.rows[0].submission_id,
+                // submissionId: 1, // Placeholder since we're not saving submissions in this version
                 score,
                 totalPoints: Object.keys(questionsMap).length,
                 totalQuestions: Object.keys(questionsMap).length,
