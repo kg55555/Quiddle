@@ -7,7 +7,7 @@ const router = express.Router();
 // GET /api/quizzes/:quiz_id — fetches a quiz with its questions and answers
 router.get('/:quiz_id', authenticate, async (req, res) => {
     const { quiz_id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     if (!quiz_id) {
         return res.status(400).json({ success: false, error: 'Quiz ID is required' });

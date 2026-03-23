@@ -21,7 +21,7 @@ const createQuiz = require("./routes/createQuiz.js");
 app.use("/api/quizzes", createQuiz);
 
 const takeQuiz = require('./routes/takeQuiz.js');
-app.use('/api/quizzes', takeQuiz);
+app.use('/api/take-quiz', takeQuiz);
 app.use('/api/quiz-submissions', takeQuiz);
 
 const user = require("./routes/user.js");

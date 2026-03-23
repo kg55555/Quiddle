@@ -81,7 +81,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
 
         try {
             setLoading(true);
-            const response = await fetch(`/api/quizzes/${quizId}`, {
+            const response = await fetch(import.meta.env.VITE_APP_BACKEND_URL + `/api/take-quiz/${quizId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -146,7 +146,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
                 }))
             };
 
-            const response = await fetch('/api/quiz-submissions', {
+            const response = await fetch(import.meta.env.VITE_APP_BACKEND_URL + '/api/quiz-submissions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

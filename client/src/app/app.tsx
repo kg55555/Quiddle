@@ -14,7 +14,7 @@ function App() {
     return (
         <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/quiz" element={<QuizTake />} />
+
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
@@ -22,6 +22,7 @@ function App() {
             {/* Protected routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/hub" element={<ProtectedRoute><Hub /></ProtectedRoute>} />
+            <Route path="/quiz/:quizId" element={<ProtectedRoute><QuizTake /></ProtectedRoute>} />
             <Route path="/quizcreate" element={<ProtectedRoute><QuizCreate /></ProtectedRoute>} />
             <Route path="/quizedit/:quizId" element={<ProtectedRoute><QuizCreate /></ProtectedRoute>} />
 
