@@ -27,6 +27,10 @@ app.use('/api/quiz-submissions', takeQuiz);
 const user = require("./routes/user.js");
 app.use("/api/user", user);
 
+const quizSearch = require("./routes/quizSearch.js");
+app.use("/api/quizsearch", quizSearch);
+
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
