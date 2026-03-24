@@ -272,10 +272,10 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
 
                         <div className='flex justify-end mt-6'>
                             <button
-                                onClick={() => window.location.href = '/quizzes'}
+                                onClick={() => window.location.href = '/hub'}
                                 className='bg-purple-700 text-white rounded-2xl md:px-5 md:py-3 hover:bg-purple-800 transition'
                             >
-                                <p>Back to Quizzes</p>
+                                <p>Back to Hub</p>
                             </button>
                         </div>
                     </div>
