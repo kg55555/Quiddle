@@ -70,6 +70,12 @@ const Header: React.FC<HeaderProps> = () => {
                                 <li>
                                     <Link to={ROUTES.PROFILE}>Profile</Link>
                                 </li>
+								{/*Hub should only show when logged in*/}
+								{token && (
+									<li>
+										<Link to={ROUTES.HUB}>Hub</Link>
+									</li>
+								)}
                             </ul>
                         </div>
 
@@ -90,10 +96,7 @@ const Header: React.FC<HeaderProps> = () => {
                         {/*login token exists*/}
                         {token !== null && token !== undefined && (
                             <div className="flex items-center gap-3 md:ml-4">
-                                <Link to={ROUTES.HUB}
-                                    className="text-white">
-                                    Hub
-                                </Link>
+                               
                                 <span className="text-white font-medium">
                                     Hi, {userFirstName}! 👋
                                 </span>
@@ -141,6 +144,14 @@ const Header: React.FC<HeaderProps> = () => {
 					<Link to={ROUTES.QUIZCREATE} onClick={() => setOpen(false)} className="block px-4 py-3 text-white">
                         Create Quiz
                     </Link>
+					
+					{/*Matches the layout in desktop*/}
+					{token && (
+						<Link to={ROUTES.HUB} onClick={() => setOpen(false)} className="block px-4 py-3 text-white">
+							Hub
+						</Link>
+					)}
+
                     
 					
 					{/*login token doesnt exist*/}
@@ -158,10 +169,6 @@ const Header: React.FC<HeaderProps> = () => {
                     {/*login token exists*/}
                     {token !== null && token !== undefined && (
                         <>
-                            <Link to={ROUTES.HUB} onClick={() => setOpen(false)}
-                                    className="block px-4 py-3 text-white">
-                                    Hub
-                            </Link>
                             <span className="block px-4 py-3 text-white font-medium">
                                 Hi, {userFirstName}! 👋
                             </span>
