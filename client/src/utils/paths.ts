@@ -10,5 +10,6 @@ export const ROUTES = {
   PROFILE: "/profile",
   QUIZCREATE: "/quizcreate",
   QUIZEDIT: '/quizedit',
+  QUIZSEARCH: '/quizsearch',
   NOTFOUND: "*",
 } as const
