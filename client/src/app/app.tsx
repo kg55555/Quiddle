@@ -8,6 +8,9 @@ import Profile from "../pages/Profile";
 import Hub from "../pages/Hub";
 import VerifyEmail from "../pages/VerifyEmail";
 import ProtectedRoute from "../components/organisms/protectedroute/ProtectedRoute";
+import QuizSearch from '../pages/QuizSearch';
+
+
 
 
 function App() {
@@ -18,6 +21,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+			<Route path="/quizsearch" element={<QuizSearch />} />
 
             {/* Protected routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
