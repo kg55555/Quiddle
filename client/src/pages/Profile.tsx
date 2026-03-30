@@ -115,7 +115,7 @@ function Profile() {
 
     // Format date for display
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+        return new Date(dateString).toLocaleDateString('en-CA', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
