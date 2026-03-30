@@ -230,7 +230,7 @@ function Profile() {
                                                                 <tr key={index} className="border-b hover:bg-gray-50">
                                                                     <td className="p-3 text-gray-800">
                                                                         <Link 
-                                                                            to={`/quiz/${item.quiz_id}`}
+                                                                            to={`/quiztake/${item.quiz_id}`}
                                                                             className="text-blue-500 hover:underline"
                                                                         >
                                                                             {item.quiz_name}
