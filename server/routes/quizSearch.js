@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../util/pool');
 
-// GET /api/quizsearch?q=math
+// GET /api/quizsearch?q=math (example)
 router.get('/', async (req, res) => {
     const { q } = req.query;
     if (!q || !q.trim()) return res.status(400).json({ error: 'Query required' });
@@ -32,6 +32,38 @@ router.get('/', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Search failed' });
+    }
+});
+
+// for searchbar suggestion
+// GET /api/quizsearch/suggestions?q=math
+router.get('/suggestions', async (req, res) => {
+    const { q } = req.query;
+
+    if (!q || q.trim().length < 4) {
+        return res.json({ results: [] });
+    }
+
+    const query = q.trim().slice(0, 200);
+
+    try {
+        const result = await pool.query(`
+            SELECT 
+                q.quiz_id,
+                q.name,
+                c.course_name
+            FROM quizzes q
+            LEFT JOIN courses c ON q.course_id = c.course_id
+            WHERE q.visibility = 'public'
+                AND q.name ILIKE $1
+            ORDER BY q.name ASC
+            LIMIT 5
+        `, [`%${query}%`]);
+
+        res.json({ results: result.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Suggestions failed' });
     }
 });
 

@@ -9,9 +9,24 @@ interface HeaderProps {
     subtitle?: string;
 }
 
+// for search suggestion
+interface SearchSuggestion {
+	quiz_id: number;
+	name: string;
+	course_name: string;
+}
+
+
 const Header: React.FC<HeaderProps> = () => {
-    const [open, setOpen] = useState(false);
+    
+	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState(''); // for search bar
+	
+	// suggestions for search bar
+	const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+	const [showSuggestions, setShowSuggestions] = useState(false);
+	const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+	
     const { token, logout, userFirstName } = useAuth();
     const navigate = useNavigate();
 	
@@ -21,6 +36,8 @@ const Header: React.FC<HeaderProps> = () => {
         if (!query.trim()) return;
         navigate(`${ROUTES.QUIZSEARCH}?q=${encodeURIComponent(query.trim())}`);
         setQuery('');
+		setSuggestions([]);
+		setShowSuggestions(false);
 		setOpen(false); // close mobile menu on search
     };
 	
@@ -31,6 +48,91 @@ const Header: React.FC<HeaderProps> = () => {
 		window.addEventListener('resize', handleResize);
 		return () => window.removeEventListener('resize', handleResize);
 	}, []);
+	
+	
+	// search suggestions useEffect
+	useEffect(() => {
+    const trimmed = query.trim();
+
+    if (trimmed.length < 4) { // minimum 4 characters
+        setSuggestions([]);
+        setShowSuggestions(false);
+		setLoadingSuggestions(false);
+        return;
+    }
+	
+	const controller = new AbortController();
+	
+    const timeout = setTimeout(async () => {
+        try {
+            setLoadingSuggestions(true);
+
+            const response = await fetch(
+                `${import.meta.env.VITE_APP_BACKEND_URL}/api/quizsearch/suggestions?q=${encodeURIComponent(trimmed)}`,
+				{ signal: controller.signal }
+            );
+			
+			if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+			
+            const data = await response.json();
+            setSuggestions((data.results || []).slice(0, 5));
+            setShowSuggestions(true);
+        } catch (error: any) {
+            if (error.name !== 'AbortError') {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        } finally {
+            setLoadingSuggestions(false);
+        }
+    }, 1000); // 1 second
+
+    return () => {
+		clearTimeout(timeout);
+		controller.abort();
+	}
+}, [query]);
+
+let suggestionsDropdown = null;
+
+if (showSuggestions) {
+	if (loadingSuggestions) {
+		suggestionsDropdown = (
+			<div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg overflow-hidden z-50">
+				<div className="px-4 py-3 text-sm text-gray-500">Loading...</div>
+			</div>
+		);
+	} else if (suggestions.length > 0) {
+		suggestionsDropdown = (
+			<div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg overflow-hidden z-50">
+				{suggestions.map((item) => (
+					<div
+						key={item.quiz_id}
+						className="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+						onClick={() => {
+							navigate(`${ROUTES.QUIZSEARCH}?q=${encodeURIComponent(item.name)}`);
+							setQuery('');
+							setSuggestions([]);
+							setShowSuggestions(false);
+						}}
+					>
+						<div className="text-sm font-medium text-gray-800">{item.name}</div>
+						<div className="text-xs text-gray-500">{item.course_name}</div>
+					</div>
+				))}
+			</div>
+		);
+	} else {
+		suggestionsDropdown = (
+			<div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg overflow-hidden z-50">
+				<div className="px-4 py-3 text-sm text-gray-500">No quizzes found.</div>
+			</div>
+		);
+	}
+}
+	
 	
     return (
         <>
@@ -44,12 +146,18 @@ const Header: React.FC<HeaderProps> = () => {
                     <div className='desktop-menu hidden md:flex justify-center items-center gap-6'>
 						
 						{/* Desktop Search Bar */}
-						<form onSubmit={handleSearch} className="flex items-center mr-2 ml-4">
+						<form onSubmit={handleSearch} className="relative flex items-center mr-2 ml-4">
 							<input
 								type="text"
 								placeholder="Search for quizzes..."
 								value={query}
 								onChange={e => setQuery(e.target.value)}
+								onFocus={() => {
+									if (suggestions.length > 0) setShowSuggestions(true);
+								}}
+								onBlur={() => {
+									setTimeout(() => setShowSuggestions(false), 500);
+								}}
 								className="px-3 py-2 rounded-l-2xl text-sm text-gray-800 outline-none w-48 lg:w-64 xl:w-80"
 							/>
 							<button
@@ -57,6 +165,10 @@ const Header: React.FC<HeaderProps> = () => {
 								className="bg-purple-700 text-white px-3 py-2 rounded-r-2xl text-sm hover:bg-purple-800">
 								Search
 							</button>
+							
+							{/*suggestions dropdown*/}
+							{suggestionsDropdown}
+
 						</form>
 						
 						<div>
