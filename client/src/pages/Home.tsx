@@ -2,7 +2,8 @@ import Footer from "components/organisms/footer";
 import Header from "components/organisms/header";
 import MainBG from "/img/pexels-cottonbro-6333728-lowres.jpg"
 import React, { useState } from "react";
-
+import { ROUTES } from '../utils/paths';
+import { Link } from 'react-router-dom';
 interface FeatureProps {
   icon: React.ReactNode;
   title: string;
@@ -83,9 +84,12 @@ const Home = () => {
             </div>
 
             <div className="mb-30 flex w-full justify-center mt-20">
-              <div className="submit-button w-fit bg-white border-4 border-purple-700 text-purple-600 font-bold text-2xl rounded-2xl md:px-7 md:py-3 md:ml-4">
-                <p>Get Started</p>
-              </div>
+              
+              <Link to={ROUTES.SIGNUP}
+                 className="submit-button w-fit bg-white border-4 border-purple-700 text-purple-600 font-bold text-2xl rounded-2xl md:px-7 md:py-3 md:ml-4">
+                Get Started
+              </Link>
+
             </div>
 
 

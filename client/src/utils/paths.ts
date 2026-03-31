@@ -1,9 +1,16 @@
 export const ROUTES = {
   HOME: "/",
   ABOUT: "/about",
-  QUIZ: "/quiz",
+  QUIZ: "/quiztake",
   FAQ: "/faq",
   SIGNUP: "/signup",
   LOGIN: "/login",
+  HUB: "/hub",
+  VERIFYEMAIL: "/verify-email",
+  PROFILE: "/profile",
+  QUIZCREATE: "/quizcreate",
+  QUIZEDIT: '/quizedit',
+  QUIZSEARCH: '/quizsearch',
+  QUIZBROWSE: '/browse',
   NOTFOUND: "*",
 } as const

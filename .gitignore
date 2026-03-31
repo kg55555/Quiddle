@@ -1,7 +1,6 @@
 .env
 package-lock.json
-/privatekey/
-/publickey/
+/tsbackend
 # Dependencies
 node_modules/
 /jspm_packages/
