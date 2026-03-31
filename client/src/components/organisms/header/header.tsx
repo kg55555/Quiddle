@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = () => {
 	
     return (
         <>
-        <header className="header sticky flex top-0 flex-col w-full bg-purple-500">
+        <header className="header sticky flex top-0 flex-col w-full bg-purple-500 z-1000">
             <div className='flex w-full h-24 justify-center'>
                 <div className="header-content flex w-full md:w-[80%] items-center justify-between px-4 md:px-0">
                     <Link to={ROUTES.HOME} className='flex items-center h-full'>
@@ -65,7 +65,7 @@ const Header: React.FC<HeaderProps> = () => {
                                     <Link to={ROUTES.HOME}>Home</Link>
                                 </li>
                                 <li>
-                                    <Link to={ROUTES.QUIZCREATE}>Create Quiz</Link>
+                                    <Link to={ROUTES.QUIZBROWSE}>Browse</Link>
                                 </li>
                                 <li>
                                     <Link to={ROUTES.PROFILE}>Profile</Link>
@@ -141,8 +141,8 @@ const Header: React.FC<HeaderProps> = () => {
                     </Link>
                     
 					
-					<Link to={ROUTES.QUIZCREATE} onClick={() => setOpen(false)} className="block px-4 py-3 text-white">
-                        Create Quiz
+					<Link to={ROUTES.QUIZBROWSE} onClick={() => setOpen(false)} className="block px-4 py-3 text-white">
+                        Browse
                     </Link>
 					
 					{/*Matches the layout in desktop*/}
