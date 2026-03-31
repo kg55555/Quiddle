@@ -24,7 +24,8 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
 
     const [loading, setLoading] = useState(false);
     const [fetchLoading, setFetchLoading] = useState(isEdit); // true only in edit mode, avoids flash of empty form
-    const [quizName, setQuizName] = useState("New Quiz");
+    const [quizName, setQuizName] = useState("");
+	const [visibility, setVisibility] = useState<'public' | 'private'>('private');
     const [courseName, setCourseName] = useState("");
     const [description, setDescription] = useState("");
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -46,6 +47,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
             })
             .then(data => {
                 setQuizName(data.name);
+				setVisibility(data.visibility ?? 'private'); // fetch visibility
                 setCourseName(data.course_name ?? "");
                 setDescription(data.description ?? "");
 
@@ -66,7 +68,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                 navigate('/hub'); // Don't leave user on a blank form
             })
             .finally(() => setFetchLoading(false));
-    }, [quizId, isEdit, token]);
+    }, [quizId, isEdit, token, navigate]);
 
     // Prevent flash of empty "New Quiz" form while edit data is loading
     if (fetchLoading) {
@@ -177,7 +179,9 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
     const handleDeleteQuestion = (id: number) => {
         setQuestions((prev) => prev.filter(q => q.id !== id).map((q, idx) => ({ ...q, id: idx + 1 })));
     };
-
+	
+	
+	
     // Validates and submits the quiz to the API
     // Uses POST for new quizzes and PUT for edits — determined by whether quizId exists in the URL
     const handleSaveQuiz = async () => {
@@ -185,6 +189,12 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
             alert("Please enter a quiz name");
             return;
         }
+		
+		if (!courseName.trim()) {
+			alert("Please enter a course name");
+			return;
+		}
+		
         if (questions.length === 0) {
             alert("Please add at least one question");
             return;
@@ -195,6 +205,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
             name: quizName,
             course_name: courseName,
             description: description,
+			visibility: visibility,
             questions: questions.map((q) => ({
                 question_text: q.question,
                 type: q.type,
@@ -219,13 +230,17 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                 }
             );
 
-            if (!response.ok) throw new Error('Failed to save quiz');
+            if (!response.ok) {
+				// get the error message from server
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to save quiz');
+			}
 
             // Return to hub after saving — works for both create and edit
             navigate('/hub');
 
-        } catch (error) {
-            alert("Something went wrong. Please try again.");
+        } catch (error: any) {
+            alert(error.message || "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -234,6 +249,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
     // Reusable button for selecting question type — highlights when active
     const TypeButton = ({ type, label }: { type: 'MC' | 'T/F' | 'SA', label: string }) => (
         <button
+			type="button"
             onClick={() => handleTypeChange(type)}
             className={`px-4 py-2 rounded-lg font-semibold transition ${
                 currentType === type ? 'bg-purple-700 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -259,7 +275,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                             value={quizName}
                             onChange={(e) => setQuizName(e.target.value)}
                             className='w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500'
-                            placeholder="Enter quiz name"
+                            placeholder="eg. Midterm Practice"
                         />
                     </div>
 
@@ -274,6 +290,23 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                             placeholder="e.g. MATH101"
                         />
                     </div>
+					
+					{/* Visibility - Public or Private*/}
+					<div className='mb-6'>
+						<label className='block text-sm font-semibold mb-2'>Visibility</label>
+						<select
+							value={visibility}
+							onChange={(e) => setVisibility(e.target.value as 'public' | 'private')}
+							className='w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500'
+						>
+							<option value="private">Private</option>
+							<option value="public">Public</option>
+						</select>
+						<p className='text-sm text-gray-500 mt-2'>
+							Private quizzes are only visible to you. Public quizzes can appear in browsing.
+						</p>
+					</div>
+					
 
                     {/* Description Input */}
                     <div className='mb-6'>
@@ -357,6 +390,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                                     {currentOptions.map((option, index) => (
                                         <div key={index} className='mb-3 flex items-center'>
                                             <button
+												type="button"
                                                 onClick={() => handleToggleCorrectAnswer(index)}
                                                 className={`mr-3 w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${
                                                     correctAnswers.includes(index)
@@ -385,6 +419,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                         {/* Add Question Button */}
                         <div className='flex justify-end'>
                             <button
+								type="button"
                                 onClick={handleAddQuestion}
                                 className="bg-purple-700 text-white rounded-2xl px-5 py-3 font-semibold hover:bg-purple-800 transition"
                             >
@@ -411,6 +446,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                                             </div>
                                         </div>
                                         <button
+											type="button"
                                             onClick={() => handleDeleteQuestion(quiz.id)}
                                             className='ml-4 text-red-600 hover:text-red-800 font-semibold text-3xl'
                                         >
