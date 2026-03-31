@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "components/organisms/footer";
 import Header from "components/organisms/header";
+import QuizResults from 'components/organisms/QuizResults';
 import { useAuth } from "../context/AuthContext";
 
 
@@ -17,6 +18,24 @@ interface QuizHistoryItem {
     attempted_at: string;
     score_achieved: number;
     number_of_questions: number;
+    attempt_id: number;
+}
+
+interface QuestionResult {
+    questionId: number;
+    questionText: string;
+    userAnswerText: string;
+    correctAnswerText: string;
+    isCorrect: boolean;
+}
+
+interface QuizResultsData {
+    score: number;
+    totalPoints: number;
+    percentage: number;
+    correctCount: number;
+    totalQuestions: number;
+    detailedResults: QuestionResult[];
 }
 
 function Profile() {
@@ -24,9 +43,12 @@ function Profile() {
     const [activeTab, setActiveTab] = useState("Profile");
     const [fetchLoading, setFetchLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-
+    const navigate = useNavigate();
     const [historyLoading, setHistoryLoading] = useState(false);
     const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
+    const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null);
+    const [selectedResults, setSelectedResults] = useState<QuizResultsData | null>(null);
+    const [selectedQuestions, setSelectedQuestions] = useState([]);
 
     const [profileData, setProfileData] = useState<ProfileProp[]>([
         { title: "First Name", key: "first_name", answer: "" },
@@ -84,6 +106,28 @@ function Profile() {
     }
 };
 
+     // Fetch previous attempt results
+    const handleViewResults = async (attemptId: number) => {
+        try {
+            setHistoryLoading(true);
+            const res = await fetch(import.meta.env.VITE_APP_BACKEND_URL + `/api/quiz-history/attempt/${attemptId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+            if (!res.ok) throw new Error('Failed to fetch attempt results');
+            
+            const data = await res.json();
+            setSelectedResults(data.results);
+            setSelectedQuestions(data.questions);
+            setSelectedAttemptId(attemptId);
+        } catch (error) {
+            alert("Failed to load attempt results");
+            console.error(error);
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
+
     const handleInputChange = (index: number, newAnswer: string) => {
         const updatedData = [...profileData];
         updatedData[index].answer = newAnswer;
@@ -124,6 +168,22 @@ function Profile() {
         });
     };
     
+    // If viewing attempt results, show QuizResults component
+    if (selectedAttemptId !== null && selectedResults) {
+        return (
+            <QuizResults
+                results={selectedResults}
+                quizQuestions={selectedQuestions}
+                onBackClick={() => {
+                    setSelectedAttemptId(null);
+                    setSelectedResults(null);
+                    setSelectedQuestions([]);
+                }}
+            />
+        );
+    
+    }
+
     return (
         <div className="flex flex-col min-h-screen">
             <Header/>
@@ -220,27 +280,33 @@ function Profile() {
                                                     <table className="w-full border-collapse">
                                                         <thead>
                                                             <tr className="bg-gray-100 border-b">
-                                                                <th className="text-left p-3 font-semibold text-gray-700">Quiz Name</th>
+                                                                <th className="text-left p-3 font-semibold text-gray-700">View Past Attempts:</th>
                                                                 <th className="text-left p-3 font-semibold text-gray-700">Date Attempted</th>
                                                                 <th className="text-center p-3 font-semibold text-gray-700">Score</th>
+                                                                <th className="text-left p-3 font-semibold text-gray-700">Retake Quiz</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             {quizHistory.map((item, index) => (
                                                                 <tr key={index} className="border-b hover:bg-gray-50">
-                                                                    <td className="p-3 text-gray-800">
-                                                                        <Link 
-                                                                            to={`/quiz/${item.quiz_id}`}
-                                                                            className="text-blue-500 hover:underline"
-                                                                        >
-                                                                            {item.quiz_name}
-                                                                        </Link>
+                                                                    <td className="p-3 text-gray-800 cursor-pointer hover:text-blue-500 font-semibold"
+                                                                        onClick={() => handleViewResults(item.attempt_id)}
+                                                                    >
+                                                                        {item.quiz_name}
                                                                     </td>
                                                                     <td className="p-3 text-gray-600">
                                                                         {formatDate(item.attempted_at)}
                                                                     </td>
                                                                     <td className="p-3 text-center text-gray-800 font-semibold">
                                                                         {item.score_achieved}/{item.number_of_questions}
+                                                                    </td>
+                                                                    <td className="p-3  text-gray-800">
+                                                                        <Link 
+                                                                            to={`/quiztake/${item.quiz_id}`}
+                                                                            className="text-blue-500 hover:underline"
+                                                                        >   
+                                                                            {'Retake'}
+                                                                        </Link>
                                                                     </td>
                                                                 </tr>
                                                             ))}

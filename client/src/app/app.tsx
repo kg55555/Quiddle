@@ -26,7 +26,7 @@ function App() {
             {/* Protected routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/hub" element={<ProtectedRoute><Hub /></ProtectedRoute>} />
-            <Route path="/quiz/:quizId" element={<ProtectedRoute><QuizTake /></ProtectedRoute>} />
+            <Route path="/quizTake/:quizId" element={<ProtectedRoute><QuizTake /></ProtectedRoute>} />
             <Route path="/quizcreate" element={<ProtectedRoute><QuizCreate /></ProtectedRoute>} />
             <Route path="/quizedit/:quizId" element={<ProtectedRoute><QuizCreate /></ProtectedRoute>} />
 
