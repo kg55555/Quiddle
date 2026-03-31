@@ -13,11 +13,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>(null!);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    const [token, setToken] = useState(sessionStorage.getItem('token'));
-    const [userId, setUserId] = useState(sessionStorage.getItem('userId'));
-    const [userFirstName, setUserFirstName] = useState(sessionStorage.getItem('userFirstName'));
-    const [userLastName, setUserLastName] = useState(sessionStorage.getItem('userLastName'));
-    const [userEmail, setUserEmail] = useState(sessionStorage.getItem('userEmail'));
+    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [userId, setUserId] = useState(localStorage.getItem('userId'));
+    const [userFirstName, setUserFirstName] = useState(localStorage.getItem('userFirstName'));
+    const [userLastName, setUserLastName] = useState(localStorage.getItem('userLastName'));
+    const [userEmail, setUserEmail] = useState(localStorage.getItem('userEmail'));
 
     const login = (token: string, userId: string, userFirstName: string, userLastName: string, userEmail: string) => {
         setToken(token);
@@ -25,11 +25,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserFirstName(userFirstName);
         setUserLastName(userLastName);
         setUserEmail(userEmail);
-        sessionStorage.setItem('token', token);
-        sessionStorage.setItem('userId', userId);
-        sessionStorage.setItem('userFirstName', userFirstName);
-        sessionStorage.setItem('userLastName', userLastName);
-        sessionStorage.setItem('userEmail', userEmail);
+        localStorage.setItem('token', token);
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('userFirstName', userFirstName);
+        localStorage.setItem('userLastName', userLastName);
+        localStorage.setItem('userEmail', userEmail);
     };
 
     const logout = () => {
@@ -38,7 +38,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserFirstName(null);
         setUserLastName(null);
         setUserEmail(null);
-        sessionStorage.clear();
+        
+		localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userFirstName');
+        localStorage.removeItem('userLastName');
+        localStorage.removeItem('userEmail');
     };
 
     return (
