@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 interface AuthContextType {
     token: string | null;
@@ -19,7 +19,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [userLastName, setUserLastName] = useState(localStorage.getItem('userLastName'));
     const [userEmail, setUserEmail] = useState(localStorage.getItem('userEmail'));
 
-    const login = (token: string, userId: string, userFirstName: string, userLastName: string, userEmail: string) => {
+    
+	//When logging in or out, broadcast to other tabs
+	const channelRef = useRef<BroadcastChannel | null>(null);
+	
+    useEffect(() => {
+        const channel = new BroadcastChannel('auth_channel');
+        channelRef.current = channel;
+		
+        channel.onmessage = (event) => {
+            const { type, payload } = event.data;
+			
+            if (type === 'LOGIN') {
+                setToken(payload.token);
+                setUserId(payload.userId);
+                setUserFirstName(payload.userFirstName);
+                setUserLastName(payload.userLastName);
+                setUserEmail(payload.userEmail);
+
+                localStorage.setItem('token', payload.token);
+                localStorage.setItem('userId', payload.userId);
+                localStorage.setItem('userFirstName', payload.userFirstName);
+                localStorage.setItem('userLastName', payload.userLastName);
+                localStorage.setItem('userEmail', payload.userEmail);
+            }
+			
+            if (type === 'LOGOUT') {
+                setToken(null);
+                setUserId(null);
+                setUserFirstName(null);
+                setUserLastName(null);
+                setUserEmail(null);
+
+                localStorage.removeItem('token');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('userFirstName');
+                localStorage.removeItem('userLastName');
+                localStorage.removeItem('userEmail');
+            }
+        };
+
+        return () => {
+            channel.close();
+        };
+    }, []);
+	
+	
+	
+	const login = (token: string, userId: string, userFirstName: string, userLastName: string, userEmail: string) => {
         setToken(token);
         setUserId(userId);
         setUserFirstName(userFirstName);
@@ -30,6 +77,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem('userFirstName', userFirstName);
         localStorage.setItem('userLastName', userLastName);
         localStorage.setItem('userEmail', userEmail);
+		
+		channelRef.current?.postMessage({
+            type: 'LOGIN',
+            payload: { token, userId, userFirstName, userLastName, userEmail }
+        });
+		
     };
 
     const logout = () => {
@@ -44,6 +97,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem('userFirstName');
         localStorage.removeItem('userLastName');
         localStorage.removeItem('userEmail');
+		
+		channelRef.current?.postMessage({ type: 'LOGOUT' });
     };
 
     return (
