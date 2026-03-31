@@ -1,7 +1,7 @@
 export const ROUTES = {
   HOME: "/",
   ABOUT: "/about",
-  QUIZ: "/quiz",
+  QUIZ: "/quiztake",
   FAQ: "/faq",
   SIGNUP: "/signup",
   LOGIN: "/login",
@@ -11,5 +11,6 @@ export const ROUTES = {
   QUIZCREATE: "/quizcreate",
   QUIZEDIT: '/quizedit',
   QUIZSEARCH: '/quizsearch',
+  QUIZBROWSE: '/browse',
   NOTFOUND: "*",
 } as const
