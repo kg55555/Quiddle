@@ -293,7 +293,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
                 <div className='flex flex-col md:w-[80%] mb-10'>
                     <h1 className='text-3xl font-bold mb-4'>{quizName}</h1>
                     <div className='quiz-question-section py-4'>
-                        {quizQuestions.map((quiz) => {
+                        {quizQuestions.map((quiz, index) => {
                             // Check if question has multiple correct answers
                             const correctAnswerCount = quiz.answers.filter(a => a.is_correct).length;
                             const isMultiple = correctAnswerCount > 1;
@@ -314,7 +314,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
                                 <div key={quiz.question_id} className='quiz-question flex flex-col mb-10'>
                                     <div className='flex mb-4'>
                                         <div className='py-2 pr-2'>
-                                            <p>{quiz.question_id}.</p>
+                                            <p>{index + 1}.</p>
                                         </div>
                                         <div className='p-2 rounded-lg bg-purple-300 w-full'>
                                             <h4>{quiz.description}</h4>
