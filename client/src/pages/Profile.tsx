@@ -316,7 +316,7 @@ function Profile() {
                                                                     </td>
                                                                     <td className="p-3  text-gray-800">
                                                                         <Link 
-                                                                            to={`/quiztake/${item.quiz_id}`}
+                                                                            to={`${ROUTES.QUIZTAKE}/${item.quiz_id}`}
                                                                             className="text-blue-500 hover:underline"
                                                                         >   
                                                                             {'Retake'}
