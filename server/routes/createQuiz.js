@@ -88,10 +88,22 @@ router.get('/:quizId', authenticate, async (req, res) => {
 router.post('/', authenticate, async (req, res) => {
     const { name, course_name, description, visibility = 'private', questions } = req.body;
     const userId = req.user.userId;
-
+	
+	if (!name || !name.trim()) {
+		return res.status(400).json({ success: false, error: 'Quiz name is required' });
+	}
+	
     if (!questions || questions.length === 0) {
         return res.status(400).json({ success: false, error: 'Questions are required' });
     }
+	
+	if (!course_name || !course_name.trim()) {
+		return res.status(400).json({ success: false, error: 'Course is required' });
+	}
+	
+	if (!['public', 'private'].includes(visibility)) {
+		return res.status(400).json({ success: false, error: 'Invalid visibility' });
+	}
 
     const client = await pool.connect();
 
@@ -99,19 +111,17 @@ router.post('/', authenticate, async (req, res) => {
         await client.query('BEGIN');
 
         // Get existing course or create a new one if it doesn't exist
-        let courseId = null;
-        if (course_name?.trim()) {
-            const { rows: [course] } = await client.query(
-                `INSERT INTO courses (course_name) VALUES ($1)
-                 ON CONFLICT (course_name) DO NOTHING
-                 RETURNING course_id`,
-                [course_name.trim()]
-            );
-            // If DO NOTHING triggered, the INSERT returns nothing so fall back to SELECT
-            courseId = course?.course_id ?? (
-                await client.query('SELECT course_id FROM courses WHERE course_name = $1', [course_name.trim()])
-            ).rows[0].course_id;
-        }
+		const { rows: [course] } = await client.query(
+			`INSERT INTO courses (course_name) VALUES ($1)
+			 ON CONFLICT (course_name) DO NOTHING
+			 RETURNING course_id`,
+			[course_name.trim()]
+		);
+		// If DO NOTHING triggered, the INSERT returns nothing so fall back to SELECT
+		const courseId = course?.course_id ?? (
+			await client.query('SELECT course_id FROM courses WHERE course_name = $1', [course_name.trim()])
+		).rows[0].course_id;
+        
 
         // Insert the quiz — number_of_questions is derived from the questions array length
         const { rows: [quiz] } = await client.query(
@@ -159,11 +169,23 @@ router.put('/:quizId', authenticate, async (req, res) => {
     const { quizId } = req.params;
     const { name, course_name, description, visibility = 'private', questions } = req.body;
     const userId = req.user.userId;
-
-    if (!questions || questions.length === 0) {
+	
+	if (!name || !name.trim()) {
+		return res.status(400).json({ success: false, error: 'Quiz name is required' });
+	}
+	
+	if (!questions || questions.length === 0) {
         return res.status(400).json({ success: false, error: 'Questions are required' });
     }
-
+	
+	if (!course_name || !course_name.trim()) {
+		return res.status(400).json({ success: false, error: 'Course is required' });
+	}
+	
+	if (!['public', 'private'].includes(visibility)) {
+		return res.status(400).json({ success: false, error: 'Invalid visibility' });
+	}
+	
     const client = await pool.connect();
 
     try {
@@ -179,19 +201,16 @@ router.put('/:quizId', authenticate, async (req, res) => {
         }
 
         // Get existing course or create a new one if it doesn't exist
-        let courseId = null;
-        if (course_name?.trim()) {
-            const { rows: [course] } = await client.query(
-                `INSERT INTO courses (course_name) VALUES ($1)
-                 ON CONFLICT (course_name) DO NOTHING
-                 RETURNING course_id`,
-                [course_name.trim()]
-            );
-            // If DO NOTHING triggered, the INSERT returns nothing so fall back to SELECT
-            courseId = course?.course_id ?? (
-                await client.query('SELECT course_id FROM courses WHERE course_name = $1', [course_name.trim()])
-            ).rows[0].course_id;
-        }
+        const { rows: [course] } = await client.query(
+			`INSERT INTO courses (course_name) VALUES ($1)
+			 ON CONFLICT (course_name) DO NOTHING
+			 RETURNING course_id`,
+			[course_name.trim()]
+		);
+		// If DO NOTHING triggered, the INSERT returns nothing so fall back to SELECT
+		const courseId = course?.course_id ?? (
+			await client.query('SELECT course_id FROM courses WHERE course_name = $1', [course_name.trim()])
+		).rows[0].course_id;
 
         // Update quiz metadata — number_of_questions is derived from the questions array length
         await client.query(

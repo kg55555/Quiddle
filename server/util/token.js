@@ -9,7 +9,7 @@ const publicKey = fs.readFileSync(path.join(__dirname, process.env.PUBLIC_KEY_PA
 const signToken = (payload) => {
   return jwt.sign(payload, privateKey, {
     algorithm: 'RS256',
-    expiresIn: '30m',  // short-lived access token
+    expiresIn: '1d',  // short-lived access token
   });
 };
 
