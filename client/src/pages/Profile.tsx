@@ -29,14 +29,28 @@ interface QuestionResult {
     isCorrect: boolean;
 }
 
-interface QuizResultsData {
+type QuizResults = {
+    submissionId: number;
     score: number;
     totalPoints: number;
-    percentage: number;
-    correctCount: number;
     totalQuestions: number;
+    correctCount: number;
+    percentage: number;
     detailedResults: QuestionResult[];
-}
+};
+
+type AnswerOption = {
+    answer_id: number;
+    answer_description: string;
+    is_correct: boolean;
+};
+
+type Question = {
+    question_id: number;
+    type: 'MC' | 'T/F' | 'SA';
+    description: string;
+    answers: AnswerOption[];
+};
 
 function Profile() {
     const { token } = useAuth();
@@ -47,8 +61,8 @@ function Profile() {
     const [historyLoading, setHistoryLoading] = useState(false);
     const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
     const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null);
-    const [selectedResults, setSelectedResults] = useState<QuizResultsData | null>(null);
-    const [selectedQuestions, setSelectedQuestions] = useState([]);
+    const [results, setSelectedResults] = useState<QuizResults | null>(null);
+    const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
 
     const [profileData, setProfileData] = useState<ProfileProp[]>([
         { title: "First Name", key: "first_name", answer: "" },
@@ -61,7 +75,6 @@ function Profile() {
 		
 		if (!token) return; // don't fetch if not logged in
 
-		
         fetch('/api/user/me', {
             headers: { Authorization: `Bearer ${token}` }
         })
@@ -118,7 +131,7 @@ function Profile() {
             
             const data = await res.json();
             setSelectedResults(data.results);
-            setSelectedQuestions(data.questions);
+            setQuizQuestions(data.questions);
             setSelectedAttemptId(attemptId);
         } catch (error) {
             alert("Failed to load attempt results");
@@ -169,15 +182,15 @@ function Profile() {
     };
     
     // If viewing attempt results, show QuizResults component
-    if (selectedAttemptId !== null && selectedResults) {
+    if (selectedAttemptId !== null && results) {
         return (
             <QuizResults
-                results={selectedResults}
-                quizQuestions={selectedQuestions}
+                results={results}
+                quizQuestions={quizQuestions}
                 onBackClick={() => {
                     setSelectedAttemptId(null);
                     setSelectedResults(null);
-                    setSelectedQuestions([]);
+                    setQuizQuestions([]);
                 }}
             />
         );
