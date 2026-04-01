@@ -1,5 +1,6 @@
 import Footer from 'components/organisms/footer';
 import Header from 'components/organisms/header';
+import { ROUTES } from '../utils/paths';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -13,7 +14,7 @@ const Hub = () => {
 
     useEffect(() => {
         if (!token) {
-            navigate('/login');
+            navigate(ROUTES.LOGIN);
             return;
         }
 
@@ -32,11 +33,11 @@ const Hub = () => {
     }, [token, navigate]);
 
     const handleEdit = (quizId: number) => {
-        navigate(`/quizedit/${quizId}`);
+        navigate(`${ROUTES.QUIZEDIT}/${quizId}`);
     };
 
     const handleTakeQuiz = (quizId: number) => {
-        navigate(`/quiztake/${quizId}`);
+        navigate(`${ROUTES.QUIZTAKE}/${quizId}`);
     };
 
     if (loading) {
@@ -59,7 +60,7 @@ const Hub = () => {
                     <div className="flex justify-between items-center mb-8">
                         <h1 className="text-3xl font-bold text-gray-900">My Quizzes</h1>
                         <Link
-                            to="/quizcreate"
+                            to={ROUTES.QUIZCREATE}
                             className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200"
                         >
                             + Create New
@@ -75,7 +76,7 @@ const Hub = () => {
                     <div className="flex flex-col gap-6 md:flex-row md:flex-wrap md:gap-6">
                         {quizzes.length === 0 ? (
                             <div className="bg-gray-100 w-full md:w-72 h-48 rounded-lg p-6 shadow-sm text-gray-600 flex items-center justify-center">
-                                No quizzes yet. <Link to="/quiz-create" className="text-indigo-600 underline ml-1 font-semibold">Create one!</Link>
+                                No quizzes yet. <Link to={ROUTES.QUIZCREATE} className="text-indigo-600 underline ml-1 font-semibold">Create one!</Link>
                             </div>
                         ) : (
                             quizzes.map((quiz) => (

@@ -1,5 +1,6 @@
 import React from 'react';
 import { QuizInfo } from '../../../types'; // Adjust path as needed
+import { ROUTES } from '../../../utils/paths';
 import { useParams, useNavigate } from 'react-router-dom';
 
 interface QuizCardProps {
@@ -10,7 +11,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({ quiz }) => {
     const navigate = useNavigate();
 
     return (
-        <div className="quiz-card border w-90 bg-purple-300 text-gray-500 p-5 cursor-pointer" onClick={() => {navigate(`/quiztake/${quiz.quiz_id}`)}}>
+        <div className="quiz-card border w-90 bg-purple-300 text-gray-500 p-5 cursor-pointer" onClick={() => navigate(`${ROUTES.QUIZTAKE}/${quiz.quiz_id}`)}>
             <div className="quiz-card-header">
                 <h3 className="quiz-card-title text-2xl font-bold text-purple-800">{quiz.quiz_name}</h3>
             </div>

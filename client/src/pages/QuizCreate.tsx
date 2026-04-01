@@ -1,5 +1,6 @@
 import Footer from 'components/organisms/footer';
 import Header from 'components/organisms/header';
+import { ROUTES } from '../utils/paths';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -65,7 +66,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
             })
             .catch(() => {
                 alert("Failed to load quiz for editing");
-                navigate('/hub'); // Don't leave user on a blank form
+                navigate(ROUTES.HUB); // Don't leave user on a blank form
             })
             .finally(() => setFetchLoading(false));
     }, [quizId, isEdit, token, navigate]);
@@ -237,7 +238,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
 			}
 
             // Return to hub after saving — works for both create and edit
-            navigate('/hub');
+            navigate(ROUTES.HUB);;
 
         } catch (error: any) {
             alert(error.message || "Something went wrong. Please try again.");

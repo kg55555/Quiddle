@@ -1,5 +1,6 @@
 import type {LoginInfo} from "../components/molecules/login-info/login-info";
 import { useState } from "react";
+import { ROUTES } from '../utils/paths';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Header from "components/organisms/header";
@@ -11,7 +12,7 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const redirectTo = location.state?.from || '/';
+  const redirectTo = location.state?.from || ROUTES.HOME;
 
   const [loginInfo, setLoginInfo] = useState({
     id: 0,

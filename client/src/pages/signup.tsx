@@ -1,8 +1,9 @@
 // pages/signup.tsx - Quiddle signup
 import Footer from "components/organisms/footer";
 import Header from "components/organisms/header";
+import { Link, useNavigate } from 'react-router-dom';
+import { ROUTES } from '../utils/paths';
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import * as Yup from "yup";
 import {
    Formik,
@@ -30,16 +31,17 @@ interface ValidInstitutions {
 }
 
 const Signup: React.FC = () => {
-  const [form, setForm] = useState<FormData>({
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    institutionID: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+	const navigate = useNavigate();
+	const [form, setForm] = useState<FormData>({
+		firstName: "",
+		middleName: "",
+		lastName: "",
+		institutionID: "",
+		email: "",
+		password: "",
+		confirmPassword: "",
+		});
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validInstitutions: ValidInstitutions[] = [
     { institutionID: 1,
@@ -163,7 +165,7 @@ const Signup: React.FC = () => {
                       alert('Please fill in all required fields.');
                     } else if (data.success) {
                       alert('Account created successfully!');
-                      window.location.href = '/login';
+                      navigate(ROUTES.LOGIN);
                     } else {
                       alert(data.error || 'Signup failed');
                     }
@@ -238,7 +240,7 @@ const Signup: React.FC = () => {
             <div className="text-center pt-6 border-t">
               <p className="text-sm text-gray-600 mb-3">Already have an account?</p>
               <Link 
-                to="/login" 
+                to={ROUTES.LOGIN} 
                 className="block w-full py-3 px-6 border-2 border-indigo-600 hover:bg-indigo-50 text-indigo-600 hover:text-indigo-700 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all mx-auto max-w-sm"
               >
                 Login here
