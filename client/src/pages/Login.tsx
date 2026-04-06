@@ -1,4 +1,3 @@
-import type {LoginInfo} from "../components/molecules/login-info/login-info";
 import { useState } from "react";
 import { ROUTES } from '../utils/paths';
 import { Link, useLocation, useNavigate } from "react-router-dom";
