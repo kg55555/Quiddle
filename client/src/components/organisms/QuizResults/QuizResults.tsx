@@ -78,7 +78,6 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                                             <p className='font-bold'>{idx + 1}. {quizQuestions[idx]?.description || 'Question not found'}</p>
                                         </div>
                                         <div className='flex-1'>
-                                            <h4 className='font-semibold text-gray-800'>{result.questionText}</h4>
                                             <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${
                                                 result.isCorrect
                                                     ? 'bg-green-200 text-green-800'
