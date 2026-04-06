@@ -131,6 +131,13 @@ function Profile() {
             if (!res.ok) throw new Error('Failed to fetch attempt results');
             
             const data = await res.json();
+
+            //test
+            console.log('Detailed Results:', data.results.detailedResults);
+            data.results.detailedResults.forEach((result: QuestionResult) => {
+                console.log(`Question ${result.questionId}: isCorrect = ${result.isCorrect}`);
+            });
+            
             setSelectedResults(data.results);
             setQuizQuestions(data.questions);
             setSelectedAttemptId(attemptId);
