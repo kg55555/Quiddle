@@ -4,6 +4,22 @@ const authenticate = require('../middleware/authenticate');
 
 const router = express.Router();
 
+
+// GET suject field values
+router.get('/subjects', async (req, res) => {
+    try {
+        const result = await pool.query(`
+		SELECT subject_id, subject_name
+		FROM subjects
+		ORDER BY subject_name`);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Subjects error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch subjects' });
+    }
+});
+
+
 // GET /api/quizzes/my-quizzes — list user's own quizzes (Hub.tsx)
 // Must be defined before /:quizId or Express will match "my-quizzes" as a quizId
 router.get('/my-quizzes', authenticate, async (req, res) => {
@@ -34,10 +50,11 @@ router.get('/:quizId', authenticate, async (req, res) => {
 
     try {
         const quizResult = await pool.query(`
-            SELECT q.quiz_id, q.name, q.description, q.visibility,
-                   COALESCE(c.course_name, '') AS course_name
+            SELECT q.quiz_id, q.name, q.description, q.visibility, q.course_id,
+                   c.course_name, c.subject_id, s.subject_name
             FROM quizzes q
             LEFT JOIN courses c ON q.course_id = c.course_id
+			LEFT JOIN subjects s ON c.subject_id = s.subject_id
             WHERE q.quiz_id = $1 AND q.created_by = $2
         `, [quizId, userId]);
 
@@ -86,7 +103,7 @@ router.get('/:quizId', authenticate, async (req, res) => {
 
 // POST /api/quizzes — creates a new quiz with its questions and answers
 router.post('/', authenticate, async (req, res) => {
-    const { name, course_name, description, visibility = 'private', questions } = req.body;
+    const { name, course_name, subject_id, description, visibility = 'private', questions } = req.body;
     const userId = req.user.userId;
 	
 	if (!name || !name.trim()) {
@@ -101,6 +118,10 @@ router.post('/', authenticate, async (req, res) => {
 		return res.status(400).json({ success: false, error: 'Course is required' });
 	}
 	
+	if (!subject_id) {
+		return res.status(400).json({ success: false, error: 'Subject is required' });
+	}
+	
 	if (!['public', 'private'].includes(visibility)) {
 		return res.status(400).json({ success: false, error: 'Invalid visibility' });
 	}
@@ -112,14 +133,14 @@ router.post('/', authenticate, async (req, res) => {
 
         // Get existing course or create a new one if it doesn't exist
 		const { rows: [course] } = await client.query(
-			`INSERT INTO courses (course_name) VALUES ($1)
+			`INSERT INTO courses (course_name, subject_id) VALUES ($1, $2)
 			 ON CONFLICT (course_name) DO NOTHING
 			 RETURNING course_id`,
-			[course_name.trim()]
+			[course_name.trim(), Number(subject_id)]
 		);
 		// If DO NOTHING triggered, the INSERT returns nothing so fall back to SELECT
 		const courseId = course?.course_id ?? (
-			await client.query('SELECT course_id FROM courses WHERE course_name = $1', [course_name.trim()])
+			await client.query('SELECT course_id FROM courses WHERE course_name = $1 AND subject_id = $2', [course_name.trim(), subject_id])
 		).rows[0].course_id;
         
 
@@ -167,7 +188,7 @@ router.post('/', authenticate, async (req, res) => {
 // PUT /api/quizzes/:quizId — updates an existing quiz with its questions and answers
 router.put('/:quizId', authenticate, async (req, res) => {
     const { quizId } = req.params;
-    const { name, course_name, description, visibility = 'private', questions } = req.body;
+    const { name, course_name, subject_id, description, visibility = 'private', questions } = req.body;
     const userId = req.user.userId;
 	
 	if (!name || !name.trim()) {
@@ -180,6 +201,10 @@ router.put('/:quizId', authenticate, async (req, res) => {
 	
 	if (!course_name || !course_name.trim()) {
 		return res.status(400).json({ success: false, error: 'Course is required' });
+	}
+	
+	if (!subject_id) {
+		return res.status(400).json({ success: false, error: 'Subject is required' });
 	}
 	
 	if (!['public', 'private'].includes(visibility)) {
@@ -197,19 +222,20 @@ router.put('/:quizId', authenticate, async (req, res) => {
             [quizId, userId]
         );
         if (rows.length === 0) {
+			await client.query('ROLLBACK');
             return res.status(403).json({ success: false, error: 'Unauthorized' });
         }
 
         // Get existing course or create a new one if it doesn't exist
         const { rows: [course] } = await client.query(
-			`INSERT INTO courses (course_name) VALUES ($1)
+			`INSERT INTO courses (course_name, subject_id) VALUES ($1, $2)
 			 ON CONFLICT (course_name) DO NOTHING
 			 RETURNING course_id`,
-			[course_name.trim()]
+			[course_name.trim(), subject_id]
 		);
 		// If DO NOTHING triggered, the INSERT returns nothing so fall back to SELECT
 		const courseId = course?.course_id ?? (
-			await client.query('SELECT course_id FROM courses WHERE course_name = $1', [course_name.trim()])
+			await client.query('SELECT course_id FROM courses WHERE course_name = $1 AND subject_id = $2', [course_name.trim(), subject_id])
 		).rows[0].course_id;
 
         // Update quiz metadata — number_of_questions is derived from the questions array length
