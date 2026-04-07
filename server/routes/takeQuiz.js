@@ -97,8 +97,6 @@ router.post('/', authenticate, async (req, res) => {
     const { quiz_id, answers } = req.body;
     const userId = req.user.userId;
 
-    console.log(`User ${userId} is submitting quiz ${quiz_id} with answers:`, answers);
-
     if (!quiz_id || !answers || !Array.isArray(answers)) {
         return res.status(400).json({ 
             success: false, 
@@ -219,14 +217,22 @@ router.post('/', authenticate, async (req, res) => {
         for (const userAnswer of answers) {
             const question = questionsMap[userAnswer.questionId];
             if (question) {
+                // Recalculate isCorrect to insert into attempted_questions
+                const correctAnswerIds = question.correctAnswers.sort((a, b) => a - b);
+                const correctAnswerDescriptions = question.allAnswers
+                    .filter(a => correctAnswerIds.includes(a.answer_id))
+                    .map(a => a.answer_description).sort();
+
+                const isCorrect = userAnswer.answerTexts.length === correctAnswerDescriptions.length && 
+                                userAnswer.answerTexts.every((text, idx) => text.toLowerCase() === correctAnswerDescriptions[idx].toLowerCase());
+                
                 await client.query(
-                    `INSERT INTO attempted_questions (attempt_id, question_id, answer_value)
-                     VALUES ($1, $2, $3)`,
-                    [submissionResult.rows[0].attempt_id, userAnswer.questionId, userAnswer.answerTexts]
+                    `INSERT INTO attempted_questions (attempt_id, question_id, answer_value, is_correct)
+                    VALUES ($1, $2, $3, $4)`,
+                    [submissionResult.rows[0].attempt_id, userAnswer.questionId, JSON.stringify(userAnswer.answerTexts), isCorrect]
                 );
             }
         }
-
         await client.query('COMMIT');
 
         res.status(200).json({

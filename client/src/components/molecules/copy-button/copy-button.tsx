@@ -9,14 +9,6 @@
  * - Screen reader text for accessibility
  * - Full keyboard and focus support
  * 
- * @component
- * @example
- * // Basic usage
- * <CopyButton text="npm install my-package" />
- * 
- * @example
- * // With custom styling
- * <CopyButton text="npm install my-package" className="custom-class" />
  * 
  * @typedef {Object} Props
  * @property {string} text - The text to copy to clipboard when button is clicked (required)

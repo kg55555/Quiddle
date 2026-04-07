@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ROUTES } from '../utils/paths';
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Header from "components/organisms/header";
 import Footer from "components/organisms/footer";

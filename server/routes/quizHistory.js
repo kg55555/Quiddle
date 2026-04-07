@@ -57,7 +57,6 @@ router.get('/attempt/:attemptId', authenticate, async (req, res) => {
     let client;
     try {
         client = await pool.connect();
-        console.log('Fetching attempt:', attemptId, 'for user:', userId); // DEBUG
 
         // Verify the attempt belongs to the user
         const attemptResult = await client.query(
@@ -67,7 +66,6 @@ router.get('/attempt/:attemptId', authenticate, async (req, res) => {
             [attemptId, userId]
         );
 
-        console.log('Attempt result:', attemptResult.rows); // DEBUG
 
         if (attemptResult.rows.length === 0) {
             return res.status(403).json({ success: false, error: 'Unauthorized or attempt not found' });
@@ -96,18 +94,16 @@ router.get('/attempt/:attemptId', authenticate, async (req, res) => {
             [quiz_id]
         );
 
-        console.log('Questions result:', questionsResult.rows.length, 'rows'); // DEBUG
 
         // Fetch user's attempted answers
         const attemptedResult = await client.query(
-            `SELECT question_id, answer_value
+            `SELECT question_id, answer_value, is_correct
              FROM attempted_questions
              WHERE attempt_id = $1
              ORDER BY question_id`,
             [attemptId]
         );
 
-        console.log('Attempted answers:', attemptedResult.rows); // DEBUG
 
         // Structure questions
         const questionsMap = {};
@@ -154,11 +150,19 @@ router.get('/attempt/:attemptId', authenticate, async (req, res) => {
                 .join(', ');
 
             // Determine if correct by checking if user's answer matches correct answer
-            const isCorrect = attemptedAnswers.some(attempt =>
-                correctAnswers.some(correct =>
-                    correct.answer_description === attempt.answer_value
-                )
-            );
+            const isCorrect = attemptedAnswers.length > 0 ? attemptedAnswers[0].is_correct : false;
+
+            // DEBUG: Log to verify
+            console.log(`Question ${question.question_id}: isCorrect from DB = ${isCorrect}`);
+
+            // DEBUG: Log all values
+            console.log(`\n=== Question ${question.question_id} ===`);
+            console.log(`Question Text: ${question.description}`);
+            console.log(`Attempted Answers:`, attemptedAnswers.map(a => a.answer_value));
+            console.log(`Correct Answers:`, correctAnswers.map(a => a.answer_description));
+            console.log(`User Answer Text: ${userAnswerText}`);
+            console.log(`Correct Answer Text: ${correctAnswerText}`);
+            console.log(`isCorrect: ${isCorrect}`);
 
             detailedResults.push({
                 questionId: question.question_id,
@@ -168,7 +172,7 @@ router.get('/attempt/:attemptId', authenticate, async (req, res) => {
                 isCorrect
             });
         });
-
+        
         const percentage = totalQuestions > 0 ? Math.round((score_achieved / totalQuestions) * 100) : 0;
 
         res.json({

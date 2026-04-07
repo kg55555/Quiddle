@@ -2,40 +2,17 @@
  * Card Component
  * 
  * A reusable card component that displays featured content with an icon, title, description,
- * and a link to external documentation. The card features a semi-transparent glass-morphism
+ * and a link to external documentation. The card features a semi-transparent
  * design with an icon watermark in the background.
  * 
- * Commonly used in documentation hubs, feature showcases, or resource directories to present
+ * Used in documentation hubs, feature showcases, or resource directories to present
  * organized information in a visually appealing grid layout.
  * 
- * @component
- * @example
- * // Basic usage with an icon component
- * import { StarIcon } from '@heroicons/react/24/outline';
- * 
- * <Card 
- *   title="React Documentation"
- *   description="Learn the fundamentals and advanced concepts of React"
- *   Icon={StarIcon}
- *   href="https://react.dev"
- * />
- * 
- * @example
- * // With custom attributes
- * <Card 
- *   title="TypeScript Guide"
- *   description="Master TypeScript for type-safe JavaScript development"
- *   Icon={DocumentIcon}
- *   href="https://www.typescriptlang.org/docs"
- *   id="typescript-card"
- *   data-testid="card-typescript"
- * />
  * 
  * @typedef {Object} CardProps
- * @property {string} title - The card heading text displayed prominently in blue
+ * @property {string} title - The blue card heading text
  * @property {string} description - The descriptive text content displayed below the title
- * @property {ForwardRefExoticComponent} Icon - An SVG icon component (e.g., from @heroicons/react)
- *                                               used as a decorative watermark in the background
+ * @property {ForwardRefExoticComponent} Icon - An SVG icon component used as a watermark in the background
  * @property {string} href - The URL that the "Visit documentation" link points to
  * @property {...rest} - Additional HTML div attributes (id, data-*, aria-*, etc.)
  *                       Note: className and children are managed internally
