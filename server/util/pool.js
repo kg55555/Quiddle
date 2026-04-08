@@ -16,13 +16,13 @@ const pool = new Pool({
 });
 
 // Test database connection
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('Database connection error:', err);
-  } else {
-    console.log('Connected to PostgreSQL database!');
-    console.log('Current time from database:', res.rows[0].now);
-  }
-});
+// pool.query('SELECT NOW()', (err, res) => {
+//   if (err) {
+//     console.error('Database connection error:', err);
+//   } else {
+//     console.log('Connected to PostgreSQL database!');
+//     console.log('Current time from database:', res.rows[0].now);
+//   }
+// });
 
 module.exports = pool;

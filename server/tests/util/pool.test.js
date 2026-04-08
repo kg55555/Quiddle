@@ -28,36 +28,4 @@ describe('pool', () => {
     expect(dbPool).toBe(mockPool);
   });
 
-  it('logs success when query succeeds', () => {
-    const { Pool } = require('pg');
-    const fakeTime = '2024-06-01T00:00:00Z';
-    const mockPool = {
-      query: jest.fn((sql, cb) => cb(null, { rows: [{ now: fakeTime }] })),
-    };
-    Pool.mockImplementation(() => mockPool);
-
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
-    require('../../util/pool');
-
-    expect(consoleSpy).toHaveBeenCalledWith('Connected to PostgreSQL database!');
-    expect(consoleSpy).toHaveBeenCalledWith('Current time from database:', fakeTime);
-    consoleSpy.mockRestore();
-  });
-
-  it('logs error when query fails', () => {
-    const { Pool } = require('pg');
-    const fakeError = new Error('Connection refused');
-    const mockPool = {
-      query: jest.fn((sql, cb) => cb(fakeError)),
-    };
-    Pool.mockImplementation(() => mockPool);
-
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-    require('../../util/pool');
-
-    expect(consoleSpy).toHaveBeenCalledWith('Database connection error:', fakeError);
-    consoleSpy.mockRestore();
-  });
 });
