@@ -4,8 +4,34 @@ const authenticate = require('../middleware/authenticate');
 
 const router = express.Router();
 
-// GET /api/quizzes/my-quizzes — list user's own quizzes (Hub.tsx)
-// Must be defined before /:quizId or Express will match "my-quizzes" as a quizId
+/**
+ * Quiz creation and editing routes
+ * 
+ * POST /api/quizzes — creates a new quiz with its questions and answers
+ * PUT /api/quizzes/:quizId — updates an existing quiz with its questions and answers
+ * GET /api/quizzes/my-quizzes — fetches all quizzes created by the authenticated user
+ * GET /api/quizzes/:quizId — fetches a single quiz with its questions and answers (for edit mode)
+ * 
+ * All routes require authentication. The quiz creator is the only one who can edit their quiz, but quizzes can be fetched for viewing based on their visibility settings.
+ * Each quiz consists of metadata (name, description, visibility, course) and an array of questions, where each question has a type, description, and an array of answers (with correctness flags).
+ * 
+ * The POST and PUT routes use database transactions to ensure that all related inserts/updates succeed or fail together, maintaining data integrity. 
+ * Error handling is implemented to return appropriate HTTP status codes and messages for various failure scenarios, such as missing fields, unauthorized access, or server errors.
+ * 
+ */
+
+
+/**
+ * GET /api/quizzes/my-quizzes — fetches all quizzes created by the authenticated user
+ * Expected request header: Authorization
+ * Possible responses:
+ * 200 | OK/success | Returns an array of quizzes created by the user
+ * 500 | Server Error | Database crash or unexpected error
+ * 
+ * This endpoint retrieves all quizzes from the database that were created by the authenticated user. Each quiz includes its metadata and is ordered by creation date, with the most recent quizzes appearing first.
+ * The route uses the authenticate middleware to ensure that only logged-in users can access their quizzes. If the database query fails, it returns a 500 status code with an error message.
+ * 
+ */
 router.get('/my-quizzes', authenticate, async (req, res) => {
     const userId = req.user.userId;
 
@@ -22,12 +48,22 @@ router.get('/my-quizzes', authenticate, async (req, res) => {
 
         res.json(result.rows);
     } catch (error) {
-        console.error('My quizzes error:', error);
         res.status(500).json({ success: false, error: 'Failed to fetch quizzes' });
     }
 });
 
-// GET /api/quizzes/:quizId — fetch a single quiz with its questions and answers (for edit mode)
+/**
+ * GET /api/quizzes/:quizId — fetches a single quiz with its questions and answers (for edit mode)
+ * Expected request header: Authorization
+ * Possible responses:
+ * 200 | OK/success | Returns the quiz with its questions and answers
+ * 404 | Not Found | Quiz does not exist or user is not authorized to view it
+ * 500 | Server Error | Database crash or unexpected error
+ * 
+ * This endpoint retrieves a specific quiz created by a user by its ID, including all associated questions and answers. If the quiz is not found or the user is unauthorized, it returns appropriate error responses.
+ * The route uses the authenticate middleware to ensure that only logged-in users can access quiz details. If the database query fails, it returns a 500 status code with an error message.
+ * 
+ */
 router.get('/:quizId', authenticate, async (req, res) => {
     const { quizId } = req.params;
     const userId = req.user.userId;
@@ -79,12 +115,22 @@ router.get('/:quizId', authenticate, async (req, res) => {
             questions: [...qMap.values()]
         });
     } catch (error) {
-        console.error('Fetch quiz error:', error);
         res.status(500).json({ success: false, error: 'Failed to fetch quiz' });
     }
 });
 
-// POST /api/quizzes — creates a new quiz with its questions and answers
+/**
+ * POST /api/quizzes — creates a new quiz with its questions and answers
+ * Expected request header: Authorization
+ * Expected request body: JSON with quiz metadata and an array of questions (each with its answers)
+ * Possible responses:
+ * 201 | Created/success | Returns the ID of the newly created quiz
+ * 400 | Bad Request | Missing required fields or invalid data
+ * 500 | Server Error | Database crash or unexpected error
+ * 
+ * This endpoint allows an authenticated user to create a new quiz by providing its metadata (name, description, visibility, course) and an array of questions 
+ * (each with its type, description, and answers).
+ */
 router.post('/', authenticate, async (req, res) => {
     const { name, course_name, description, visibility = 'private', questions } = req.body;
     const userId = req.user.userId;
@@ -156,7 +202,6 @@ router.post('/', authenticate, async (req, res) => {
     } catch (error) {
         // Roll back everything if any insert failed
         await client.query('ROLLBACK');
-        console.error('Quiz creation error:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
     } finally {
         // Always release the client back to the pool
@@ -164,7 +209,21 @@ router.post('/', authenticate, async (req, res) => {
     }
 });
 
-// PUT /api/quizzes/:quizId — updates an existing quiz with its questions and answers
+
+/**
+ * PUT /api/quizzes/:quizId — updates an existing quiz with its questions and answers
+ * Expected request header: Authorization
+ * Expected request body: JSON with quiz metadata and an array of questions (each with its answers)
+ * Possible responses:
+ * 200 | OK/success | Returns the ID of the updated quiz
+ * 400 | Bad Request | Missing required fields or invalid data
+ * 403 | Forbidden | User is not the creator of the quiz
+ * 404 | Not Found | Quiz does not exist
+ * 500 | Server Error | Database crash or unexpected error
+ * 
+ * This endpoint allows an authenticated user to update an existing quiz that they created by providing its metadata (name, description, visibility, course) and an array of questions 
+ * (each with its type, description, and answers). The user must be the creator of the quiz to update it. If the quiz is not found or the user is unauthorized, it returns appropriate error responses.
+ */
 router.put('/:quizId', authenticate, async (req, res) => {
     const { quizId } = req.params;
     const { name, course_name, description, visibility = 'private', questions } = req.body;
@@ -252,7 +311,6 @@ router.put('/:quizId', authenticate, async (req, res) => {
     } catch (error) {
         // Roll back everything if any update failed
         await client.query('ROLLBACK');
-        console.error('Quiz update error:', error);
         res.status(500).json({ success: false, error: 'Internal server error' });
     } finally {
         // Always release the client back to the pool
