@@ -4,9 +4,13 @@ const authenticate = require('../middleware/authenticate');
 
 const router = express.Router();
 
+
 /**
  * Quiz creation and editing routes
  * 
+ * This module defines the routes for creating, updating, and fetching quizzes in the application. It includes the following endpoints:
+ * 
+ * GET /api/quizzes/subjects — fetches all subjects for the subject dropdown in quiz creation/editing
  * POST /api/quizzes — creates a new quiz with its questions and answers
  * PUT /api/quizzes/:quizId — updates an existing quiz with its questions and answers
  * GET /api/quizzes/my-quizzes — fetches all quizzes created by the authenticated user
@@ -19,6 +23,39 @@ const router = express.Router();
  * Error handling is implemented to return appropriate HTTP status codes and messages for various failure scenarios, such as missing fields, unauthorized access, or server errors.
  * 
  */
+
+/*
+*  
+*
+* GET /api/quizzes/subjects — fetches all subjects for the subject dropdown in quiz creation/editing
+* Possible responses:
+* 200 | OK/success | Returns an array of subjects with their IDs and names
+* 500 | Server Error | Database crash or unexpected error
+* This endpoint retrieves all subjects from the database to populate the subject dropdown in the quiz creation and editing forms. 
+* Each subject includes its ID and name. If the database query fails, it returns a 500 status code with an error message.
+* This route does not require authentication since subjects are needed for quiz creation, but it can be accessed by any user to fetch the list of subjects.
+* The subjects are ordered alphabetically by name for easier navigation in the dropdown.
+* Example response:
+* [
+*   { "subject_id": 1, "subject_name": "Mathematics" },
+*  { "subject_id": 2, "subject_name": "Science" },
+*  { "subject_id": 3, "subject_name": "History" }
+* ]
+* The route uses a simple SQL query to fetch the subject data from the database and returns it as JSON. If an error occurs during the database query, it logs the error and returns a 500 status code with an appropriate error message.
+* The frontend can call this endpoint when the quiz creation or editing form loads to populate the subject dropdown, allowing users to select the relevant subject for their quiz.
+* Overall, this route provides essential data for the quiz creation process while ensuring proper error handling and response formatting.
+*/
+router.get('/subjects', async (req, res) => {
+    try {
+        const result = await pool.query(`
+		SELECT subject_id, subject_name
+		FROM subjects
+		ORDER BY subject_name`);
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to fetch subjects' });
+    }
+});
 
 
 /**
@@ -46,7 +83,7 @@ router.get('/my-quizzes', authenticate, async (req, res) => {
             ORDER BY q.created_at DESC
         `, [userId]);
 
-        res.json(result.rows);
+        res.status(200).json(result.rows);
     } catch (error) {
         res.status(500).json({ success: false, error: 'Failed to fetch quizzes' });
     }
@@ -70,10 +107,11 @@ router.get('/:quizId', authenticate, async (req, res) => {
 
     try {
         const quizResult = await pool.query(`
-            SELECT q.quiz_id, q.name, q.description, q.visibility,
-                   COALESCE(c.course_name, '') AS course_name
+            SELECT q.quiz_id, q.name, q.description, q.visibility, q.course_id,
+                   c.course_name, c.subject_id, s.subject_name
             FROM quizzes q
             LEFT JOIN courses c ON q.course_id = c.course_id
+			LEFT JOIN subjects s ON c.subject_id = s.subject_id
             WHERE q.quiz_id = $1 AND q.created_by = $2
         `, [quizId, userId]);
 
@@ -132,7 +170,7 @@ router.get('/:quizId', authenticate, async (req, res) => {
  * (each with its type, description, and answers).
  */
 router.post('/', authenticate, async (req, res) => {
-    const { name, course_name, description, visibility = 'private', questions } = req.body;
+    const { name, course_name, subject_id, description, visibility = 'private', questions } = req.body;
     const userId = req.user.userId;
 	
 	if (!name || !name.trim()) {
@@ -147,6 +185,10 @@ router.post('/', authenticate, async (req, res) => {
 		return res.status(400).json({ success: false, error: 'Course is required' });
 	}
 	
+	if (!subject_id) {
+		return res.status(400).json({ success: false, error: 'Subject is required' });
+	}
+	
 	if (!['public', 'private'].includes(visibility)) {
 		return res.status(400).json({ success: false, error: 'Invalid visibility' });
 	}
@@ -158,14 +200,14 @@ router.post('/', authenticate, async (req, res) => {
 
         // Get existing course or create a new one if it doesn't exist
 		const { rows: [course] } = await client.query(
-			`INSERT INTO courses (course_name) VALUES ($1)
+			`INSERT INTO courses (course_name, subject_id) VALUES ($1, $2)
 			 ON CONFLICT (course_name) DO NOTHING
 			 RETURNING course_id`,
-			[course_name.trim()]
+			[course_name.trim(), Number(subject_id)]
 		);
 		// If DO NOTHING triggered, the INSERT returns nothing so fall back to SELECT
 		const courseId = course?.course_id ?? (
-			await client.query('SELECT course_id FROM courses WHERE course_name = $1', [course_name.trim()])
+			await client.query('SELECT course_id FROM courses WHERE course_name = $1 AND subject_id = $2', [course_name.trim(), subject_id])
 		).rows[0].course_id;
         
 
@@ -226,7 +268,7 @@ router.post('/', authenticate, async (req, res) => {
  */
 router.put('/:quizId', authenticate, async (req, res) => {
     const { quizId } = req.params;
-    const { name, course_name, description, visibility = 'private', questions } = req.body;
+    const { name, course_name, subject_id, description, visibility = 'private', questions } = req.body;
     const userId = req.user.userId;
 	
 	if (!name || !name.trim()) {
@@ -239,6 +281,10 @@ router.put('/:quizId', authenticate, async (req, res) => {
 	
 	if (!course_name || !course_name.trim()) {
 		return res.status(400).json({ success: false, error: 'Course is required' });
+	}
+	
+	if (!subject_id) {
+		return res.status(400).json({ success: false, error: 'Subject is required' });
 	}
 	
 	if (!['public', 'private'].includes(visibility)) {
@@ -256,19 +302,20 @@ router.put('/:quizId', authenticate, async (req, res) => {
             [quizId, userId]
         );
         if (rows.length === 0) {
+			await client.query('ROLLBACK');
             return res.status(403).json({ success: false, error: 'Unauthorized' });
         }
 
         // Get existing course or create a new one if it doesn't exist
         const { rows: [course] } = await client.query(
-			`INSERT INTO courses (course_name) VALUES ($1)
+			`INSERT INTO courses (course_name, subject_id) VALUES ($1, $2)
 			 ON CONFLICT (course_name) DO NOTHING
 			 RETURNING course_id`,
-			[course_name.trim()]
+			[course_name.trim(), subject_id]
 		);
 		// If DO NOTHING triggered, the INSERT returns nothing so fall back to SELECT
 		const courseId = course?.course_id ?? (
-			await client.query('SELECT course_id FROM courses WHERE course_name = $1', [course_name.trim()])
+			await client.query('SELECT course_id FROM courses WHERE course_name = $1 AND subject_id = $2', [course_name.trim(), subject_id])
 		).rows[0].course_id;
 
         // Update quiz metadata — number_of_questions is derived from the questions array length
@@ -306,7 +353,7 @@ router.put('/:quizId', authenticate, async (req, res) => {
 
         // Commit only if all updates succeeded
         await client.query('COMMIT');
-        res.json({ success: true, quizId });
+        res.status(200).json({ success: true, quizId });
 
     } catch (error) {
         // Roll back everything if any update failed

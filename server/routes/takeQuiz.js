@@ -147,8 +147,6 @@ router.post('/', authenticate, async (req, res) => {
     const { quiz_id, answers } = req.body;
     const userId = req.user.userId;
 
-    console.log(`User ${userId} is submitting quiz ${quiz_id} with answers:`, answers);
-
     if (!quiz_id || !answers || !Array.isArray(answers)) {
         return res.status(400).json({ 
             success: false, 

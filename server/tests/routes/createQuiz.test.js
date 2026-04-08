@@ -15,6 +15,7 @@ describe('quiz routes', () => {
   const validQuiz = {
     name: 'My Quiz',
     course_name: 'Math 101',
+    subject_id: 1,
     description: 'A test quiz',
     visibility: 'public',
     questions: [
@@ -52,6 +53,34 @@ describe('quiz routes', () => {
     app.use(express.json());
     app.use('/', require('../../routes/createQuiz'));
   });
+
+  // ─── GET /subjects ───────────────────────────────────────────
+
+  describe('GET /subjects', () => {
+    it('200 - returns subjects', async () => {
+      const fakeSubjects = [
+        { subject_id: 1, name: 'Math' },
+        { subject_id: 2, name: 'History' },
+      ];
+      pool.query = jest.fn().mockResolvedValue({ rows: fakeSubjects });
+
+      const res = await request(app).get('/subjects');
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual(fakeSubjects);
+    });
+
+    it('500 - database error', async () => {
+      pool.query = jest.fn().mockRejectedValue(new Error('DB crash'));
+
+      const res = await request(app).get('/subjects');
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toBe('Failed to fetch subjects');
+    });
+
+  });
+
 
   // ─── GET /my-quizzes ─────────────────────────────────────────
 

@@ -1,5 +1,8 @@
 import { forwardRef, ComponentProps } from "react";
 
+/**
+ * A reusable button component with predefined styling.
+ */
 const Button = forwardRef<
   HTMLButtonElement,
   Omit<ComponentProps<"button">, "className">

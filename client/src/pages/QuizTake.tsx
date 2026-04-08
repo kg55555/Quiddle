@@ -138,6 +138,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
         console.log(`Current answers state:`, answers);
     };
 
+    // After user has sent the quiz, store results in database and show quiz result
     const handleSubmit = async () => {
         if (!window.confirm('Ready to submit? You cannot change your answers after submission.')) {
             return;
@@ -145,7 +146,6 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
 
         try {
             setLoading(true);
-
             const payload = {
                 quiz_id: quizId,
                 answers: Object.entries(answers).map(([questionId, answerTexts]) => ({
@@ -154,6 +154,7 @@ const QuizTake: React.FC<QuizTakeProps> = () => {
                 }))
             };
 
+            // Se
             const response = await fetch(import.meta.env.VITE_APP_BACKEND_URL + '/api/quiz-submissions', {
                 method: 'POST',
                 headers: {
