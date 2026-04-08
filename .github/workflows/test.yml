@@ -9,6 +9,7 @@ on:
 jobs:
   jest:
     runs-on: ubuntu-latest
+    environment: quiddlenv
     strategy:
       matrix:
         branch: [main, dev, test-runner]
@@ -29,6 +30,16 @@ jobs:
       - run: npm install
 
       - run: npm test -- --ci --coverage
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PORT: ${{ secrets.PORT }}
+          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          GOOGLE_APP_PASS: ${{ secrets.GOOGLE_APP_PASS }}
+          SMTP_TEST_RECEIVER: ${{ secrets.SMTP_TEST_RECEIVER }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -38,6 +49,7 @@ jobs:
 
   selenium:
     runs-on: ubuntu-latest
+    environment: quiddlenv
     strategy:
       matrix:
         branch: [main, dev, test-runner]
@@ -78,16 +90,23 @@ jobs:
       - name: Start server
         run: npm start --prefix server &
         env:
-          PORT: 3000
-          NODE_ENV: test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PORT: ${{ secrets.PORT }}
+          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          GOOGLE_APP_PASS: ${{ secrets.GOOGLE_APP_PASS }}
+          SMTP_TEST_RECEIVER: ${{ secrets.SMTP_TEST_RECEIVER }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
 
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 30000
+        run: npx wait-on http://localhost:${{ secrets.PORT }} --timeout 30000
 
       - name: Run Selenium tests
         run: npm test --prefix test
         env:
-          BASE_URL: http://localhost:3000
+          BASE_URL: http://localhost:${{ secrets.PORT }}
           HEADLESS: true
 
       - uses: actions/upload-artifact@v4
