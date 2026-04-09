@@ -48,72 +48,84 @@ jobs:
           path: server/coverage/
 
   selenium:
-    runs-on: ubuntu-latest
-    environment: quiddlenv
-    strategy:
-      matrix:
-        branch: [main, dev, test-runner]
-      fail-fast: false
+      runs-on: ubuntu-latest
+      environment: quiddlenv
+      strategy:
+        matrix:
+          branch: [main, dev, test-runner]
+        fail-fast: false
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ matrix.branch }}
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            ref: ${{ matrix.branch }}
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+        - uses: actions/setup-node@v4
+          with:
+            node-version: 20
 
-      - name: Cache client yarn deps
-        uses: actions/cache@v4
-        with:
-          path: client/.yarn/cache
-          key: yarn-client-${{ matrix.branch }}-${{ hashFiles('client/yarn.lock') }}
-          restore-keys: yarn-client-${{ matrix.branch }}-
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.11'
+            cache: pip
+            cache-dependency-path: test/requirements.txt
 
-      - name: Install server deps
-        run: npm install --prefix server
+        - name: Cache client yarn deps
+          uses: actions/cache@v4
+          with:
+            path: client/.yarn/cache
+            key: yarn-client-${{ matrix.branch }}-${{ hashFiles('client/yarn.lock') }}
+            restore-keys: yarn-client-${{ matrix.branch }}-
 
-      - name: Install client deps
-        run: yarn install --frozen-lockfile
-        working-directory: client
+        - name: Install server deps
+          run: npm install --prefix server
 
-      - name: Install test deps
-        run: npm install --prefix test
+        - name: Install client deps
+          run: yarn install --frozen-lockfile
+          working-directory: client
 
-      - uses: browser-actions/setup-chrome@v1
+        - name: Install test deps
+          run: pip install -r test/requirements.txt
 
-      - name: Build client
-        run: yarn build
-        working-directory: client
+        - uses: browser-actions/setup-chrome@v1
 
-      - name: Start server
-        run: npm start --prefix server &
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          PORT: ${{ secrets.PORT }}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          GOOGLE_APP_PASS: ${{ secrets.GOOGLE_APP_PASS }}
-          SMTP_TEST_RECEIVER: ${{ secrets.SMTP_TEST_RECEIVER }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
+        - name: Build client
+          run: yarn build
+          working-directory: client
+          env:
+            VITE_APP_BACKEND_URL: ${{ secrets.VITE_APP_BACKEND_URL }}
+            VITE_APP_FRONTEND_URL: ${{ secrets.VITE_APP_FRONTEND_URL }}
 
-      - name: Wait for server
-        run: npx wait-on http://localhost:${{ secrets.PORT }} --timeout 30000
+        - name: Start server
+          run: npm start --prefix server &
+          env:
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            PORT: ${{ secrets.PORT }}
+            ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+            FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+            SMTP_USER: ${{ secrets.SMTP_USER }}
+            GOOGLE_APP_PASS: ${{ secrets.GOOGLE_APP_PASS }}
+            SMTP_TEST_RECEIVER: ${{ secrets.SMTP_TEST_RECEIVER }}
+            PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+            PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
 
-      - name: Run Selenium tests
-        run: npm test --prefix test
-        env:
-          BASE_URL: http://localhost:${{ secrets.PORT }}
-          HEADLESS: true
 
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: selenium-screenshots-${{ matrix.branch }}
-          path: test/screenshots/
+        - name: Wait for server
+          run: npx wait-on http://localhost:${{ secrets.PORT }} --timeout 30000
+
+        - name: Run Selenium tests
+          run: python -m pytest test/ -v
+          env:
+            BASE_URL: http://localhost:${{ secrets.PORT }}
+            HEADLESS: true
+            QUIDDLE_TEST_USER: ${{ secrets.QUIDDLE_TEST_USER }}
+            QUIDDLE_TEST_PASS: ${{ secrets.QUIDDLE_TEST_PASS }}
+
+        - uses: actions/upload-artifact@v4
+          if: failure()
+          with:
+            name: selenium-screenshots-${{ matrix.branch }}
+            path: test/screenshots/
 
   all-tests-pass:
     runs-on: ubuntu-latest
