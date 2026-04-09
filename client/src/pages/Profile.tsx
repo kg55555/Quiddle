@@ -58,7 +58,6 @@ function Profile() {
     const [activeTab, setActiveTab] = useState("Profile");
     const [fetchLoading, setFetchLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const navigate = useNavigate();
     const [historyLoading, setHistoryLoading] = useState(false);
     const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
     const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null);
