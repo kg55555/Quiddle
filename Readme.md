@@ -12,20 +12,20 @@ their respective subfolders in client and server.
 The project can be run by cloning locally and having a correct setup of the environment variables, which consist of the variables
 below in the client folder.
 
-VITE_APP_BACKEND_URL=
-VITE_APP_FRONTEND_URL=
+VITE_APP_BACKEND_URL=  
+VITE_APP_FRONTEND_URL=  
 
 As for the server, there are these variables listed below.
 
-DATABASE_URL=
-PORT=
-ENVIRONMENT=
-FRONTEND_URL=
-SMTP_USER=
-GOOGLE_APP_PASS=
-SMTP_TEST_RECEIVER=
-PRIVATE_KEY=
-PUBLIC_KEY=
+DATABASE_URL=  
+PORT=  
+ENVIRONMENT=  
+FRONTEND_URL=  
+SMTP_USER=  
+GOOGLE_APP_PASS=  
+SMTP_TEST_RECEIVER=  
+PRIVATE_KEY=  
+PUBLIC_KEY=  
 
 A gmail account is used for sending verfication emails while private/public keys are used for jwt authentication.
 
