@@ -206,7 +206,7 @@ describe('Login Component', () => {
                 expect(globalThis.fetch).toHaveBeenCalled();
             });
             expect(globalThis.fetch).toHaveBeenCalledWith(
-                'http://localhost:3001/api/auth/login',
+                import.meta.env.VITE_APP_BACKEND_URL + '/api/auth/login',
                     expect.objectContaining({
                         method: 'POST',
                         headers: {
