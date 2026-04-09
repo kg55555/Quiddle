@@ -2,13 +2,27 @@ const express = require('express');
 const pool = require('../util/pool');
 const authenticate = require('../middleware/authenticate');
 
+/**
+* This module defines routes for fetching a user's quiz attempt history and detailed results of specific quiz attempts. It includes three main endpoints:
+ * 1. GET /api/quiz-history: Retrieves a list of all quizzes attempted by the authenticated user, including metadata such as quiz name, description, course name, score achieved, and attempt date.
+ * 2. GET /api/quiz-history/attempt/:attemptId: Fetches detailed results for a specific quiz attempt, including the user's answers, correct answers, and whether each question was answered correctly.
+ * 3. GET /api/quiz-history/quiz-stats: Provides aggregated statistics about the user's quiz attempts, such as total quizzes taken, average score, and highest score.
+ */
+
 const router = express.Router();
-// from userID, get all attemped quiz (all quizzes taken with foreign key matching
-// user ID and foreign key matching quizzes)
 
-// display
-
-// GET /api/quiz-history — fetch user's quiz attempt history
+/**
+ * GET /api/quiz-history — fetches a list of quizzes attempted by the authenticated user, including metadata and scores
+ * Expected request header: Authorization
+ * Possible responses:
+ * 200 | OK/success | Returns a list of quiz attempts with metadata and scores
+ * 500 | Server Error | Database crash or unexpected error
+ * 
+ * This endpoint retrieves a list of all quizzes attempted by the authenticated user, including metadata such as quiz name, description, course name, score achieved, and attempt date. 
+ * The route uses the authenticate middleware to ensure that only logged-in users can access their quiz history. If the database query fails, it returns a 500 status code with an error message.
+ * 
+ * Note: This endpoint is intended for users to view their quiz attempt history and does not return attempts made by other users.
+ */
 router.get('/', authenticate, async (req, res) => {
     const userId = req.user.userId;
 
@@ -50,6 +64,17 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // GET /api/quiz-history/attempt/:attemptId — fetch previous attempt results
+/**
+ * GET /api/quiz-history/attempt/:attemptId — fetches detailed results for a specific quiz attempt, including user's answers, correct answers, and whether each question was answered correctly
+ * Expected request header: Authorization
+ * Possible responses:
+ * 200 | OK/success | Returns detailed results for the specified quiz attempt
+ * 403 | Forbidden | User is not the creator of the quiz attempt or attempt not found
+ * 404 | Not Found | Quiz attempt does not exist
+ * 500 | Server Error | Database crash or unexpected error
+ * 
+ * This endpoint retrieves detailed results for a specific quiz attempt made by the authenticated user. It includes the user's answers, correct answers, and whether each question was answered correctly.
+ */
 router.get('/attempt/:attemptId', authenticate, async (req, res) => {
     const { attemptId } = req.params;
     const userId = req.user.userId;
@@ -191,11 +216,24 @@ router.get('/attempt/:attemptId', authenticate, async (req, res) => {
         console.error('Fetch attempt results error:', error);
         res.status(500).json({ success: false, error: error.message || 'Failed to fetch attempt results' });
     } finally {
-        client.release();
+        if (client) {
+            client.release();
+        }
     }
 });
 
-// GET /api/quiz-stats — fetch user's quiz statistics
+/**
+ * GET /api/quiz-history/quiz-stats — fetches aggregated statistics about the user's quiz attempts, such as total quizzes taken, average score, and highest score
+ * Expected request header: Authorization
+ * Possible responses:
+ * 200 | OK/success | Returns aggregated quiz statistics for the user
+ * 500 | Server Error | Database crash or unexpected error
+ * 
+ * This endpoint provides aggregated statistics about the authenticated user's quiz attempts, including total quizzes taken, total attempts, average score, highest score, 
+ * and the number of quizzes created by the user. The route uses the authenticate middleware to ensure that only logged-in users can access their quiz statistics. 
+ * If the database query fails, it returns a 500 status code with an error message.
+ * 
+ */
 router.get('/quiz-stats', authenticate, async (req, res) => {
     const userId = req.user.userId;
 

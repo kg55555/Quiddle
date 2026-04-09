@@ -4,7 +4,26 @@ const authenticate = require('../middleware/authenticate');
 
 const router = express.Router();
 
+/**
+ * This module defines routes for taking quizzes and submitting quiz results. It includes two main endpoints:
+ * 1. GET /api/take-quiz/:quiz_id: Fetches a quiz by its ID, including all associated questions and answers. It checks the quiz's visibility settings to determine if the authenticated user has access to view it.
+ * 2. POST /api/quiz-submissions: Submits a user's answers for a quiz, grades the quiz, and returns the results. It also saves the quiz attempt in the database for future reference in the user's quiz history.
+ */
+
 // GET /api/quizzes/:quiz_id — fetches a quiz with its questions and answers
+/**
+ * GET /api/take-quiz/:quiz_id — fetches a quiz with its questions and answers
+ * Expected request header: Authorization
+ * Possible responses:
+ * 200 | OK/success | Returns the quiz with its questions and answers
+ * 403 | Forbidden | User is not the creator of the quiz (for private quizzes)
+ * 404 | Not Found | Quiz does not exist or user is not authorized to view it
+ * 500 | Server Error | Database crash or unexpected error
+ * 
+ * This endpoint retrieves a specific quiz by its ID, including all associated questions and answers. It checks the quiz's visibility settings to determine if the 
+ * authenticated user has access to view it.
+ * 
+ */
 router.get('/:quiz_id', authenticate, async (req, res) => {
     const { quiz_id } = req.params;
     const userId = req.user.userId;
@@ -93,6 +112,37 @@ router.get('/:quiz_id', authenticate, async (req, res) => {
 });
 
 // POST /api/quiz-submissions — submits and grades a quiz
+/**
+ * POST /api/quiz-submissions — submits and grades a quiz
+ * Expected request header: Authorization
+ * Expected request body: {
+ *   quiz_id: integer,
+ *   answers: [{
+        quiz_id: quizId,
+        answers: {
+            questionId: number,
+            answerTexts: string[] // For multiple correct answers, user can submit multiple answer texts}
+ *    }
+ * }]
+ * }
+ * 
+ * 
+ * 
+ * Possible responses:
+ * 200 | OK/success | Quiz graded successfully, returns score and detailed results
+ * 400 | Bad Request | Missing or invalid quiz ID or answers
+ * 403 | Forbidden | User is not the creator of the quiz (for private quizzes)
+ * 404 | Not Found | Quiz does not exist or user is not authorized to view it
+ * 500 | Server Error | Database crash or unexpected error
+ * 
+ * This endpoint allows a user to submit their answers for a quiz, which are then graded against the correct answers stored in the database. 
+ * The endpoint checks the quiz's visibility settings to ensure the user has access to take it. If the submission is valid, it calculates the user's score, 
+ * saves the attempt in the database, and returns detailed results including which questions were answered correctly or incorrectly.
+ * If the quiz ID or answers are missing or invalid, it returns a 400 status code with an error message. If the user is not authorized to take the quiz, 
+ * it returns a 403 status code. If the quiz is not found, it returns a 404 status code. In case of any database errors or unexpected issues, 
+ * it returns a 500 status code with an appropriate error message.
+ */
+
 router.post('/', authenticate, async (req, res) => {
     const { quiz_id, answers } = req.body;
     const userId = req.user.userId;

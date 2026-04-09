@@ -8,8 +8,37 @@ const { signToken, verifyToken } = require('../util/token');
 
 const router = express.Router();
 
-// Signup endpoint
+/**
+ * This module defines the authentication routes for the application, including user signup, login, and token verification. 
+ * The signup route handles user registration by validating input, checking for existing users, and inserting new users into the database. It also sends a verification email using Nodemailer. 
+ * The login route authenticates users by verifying their credentials and returns a JWT token upon successful login. 
+ * The token verification route checks the validity of a provided JWT token and returns an appropriate response. 
+ * Each route includes error handling to return relevant HTTP status codes and messages based on different failure scenarios.
+ */
 
+
+/**
+* Signup endpoint
+* Expected request body: {
+*  firstName: string,
+*  middleName: string (optional),
+*  lastName: string,
+*  institutionID: integer,
+*  email: string,
+*  password: string
+* }
+* Possible responses:
+* 201 | Created/success| User successfully created|
+* 400 | Bad Request  | Missing required fields
+* 404 | Not Found    | Institution ID doesn't exist
+* 400 | Instituion domain | Domain of institution not found
+* 409 | Conflict     | Email already registered
+* 500 | Server Error | Database crash or unexpected error
+* 
+* The email verification process is handled by sending an email with a unique validation string. The user must click the link in the email to verify their account, 
+* which updates the database to mark the email as validated.
+* 
+*/
 router.post('/signup', async (req, res) => {
     try {
         const { firstName, middleName, lastName, institutionID, email, password } = req.body;
@@ -67,14 +96,28 @@ router.post('/signup', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Signup error:', error);
         // 500 - Server/database error
         res.status(500).json({ success: false, error: 'Internal server error' });
     }
 });
 
 
-// Login endpoint
+/**
+ * Login endpoint
+ * Expected request body: {
+ *  username: string (email),
+ *  password: string
+ * }
+ * Possible responses:
+ * 200 | OK/success | Login successful, returns JWT token and user info
+ * 401 | Unauthorized | Invalid credentials (email not found or password mismatch)
+ * 500 | Server Error | Database crash or unexpected error
+ * 
+ * The login process involves checking if the provided email exists in the database, verifying the password using bcrypt, 
+ * and then signing a JWT token with the user's ID and email if authentication is successful. 
+ * The token can be used for subsequent authenticated requests to protected routes.
+ * 
+ */
 router.post('/login', async (req, res) => {
 
     try {
@@ -85,7 +128,6 @@ router.post('/login', async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-            console.log(`Login failed`);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
@@ -93,13 +135,11 @@ router.post('/login', async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password_hash);
 
         if (!validPassword) {
-            console.log(`Login failed`);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         const token = signToken({ userId: user.id, email: user.email });
 
-        console.log(`Login successful for: ${user.id}`);
         res.json({
             success: true,
             token: token,
@@ -109,11 +149,19 @@ router.post('/login', async (req, res) => {
             email: user.email
         });
     } catch (error) {
-        console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' });
     }
 });
 
+/**
+ * Verify token endpoint
+ * Expected request header: Authorization: Bearer <token>
+ * Possible responses:
+ * 200 | OK/success | Token is valid, returns user info
+ * 401 | Unauthorized | Invalid or expired token
+ * 
+ * This endpoint checks the validity of a JWT token provided in the Authorization header.
+ */
 router.get('/verify-token', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
@@ -124,7 +172,6 @@ router.get('/verify-token', async (req, res) => {
         const userData = verifyToken(token);
         res.status(201).json({ success: true,});
     } catch (error) {
-        console.error('Token verification error:', error);
         res.status(401).json({ success: false, error: 'Invalid or expired token' });
     }
 });

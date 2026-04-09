@@ -1,7 +1,11 @@
 const nodemailer = require('nodemailer');
 const path = require('path');
-// Ensure environment variables are loaded
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
+/**
+ * This module sets up a Nodemailer transporter using Gmail's SMTP service. It reads the SMTP credentials from environment variables and verifies the connection on startup. 
+ * The transporter is exported for use in other parts of the application, such as sending verification emails during user registration.
+ */
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
