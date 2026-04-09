@@ -9,11 +9,11 @@ import userEvent from '@testing-library/user-event';
 
 // Mock environment variable
 vi.stubGlobal('import', {
-  meta: {
-    env: {
-      VITE_APP_BACKEND_URL: 'http://localhost:3000',
+    meta: {
+        env: {
+            VITE_APP_BACKEND_URL: 'http://localhost:3000',
+        },
     },
-  },
 });
 
 // Mock fetch globally
@@ -143,7 +143,7 @@ describe('Login Component', () => {
     });
 
     // ===== API Tests =====
-    describe('Sneding Data to API', () => {
+    describe('Sending Data to API', () => {
         it('should show error for invalid credentials', async () => {
             renderLogin();
 
