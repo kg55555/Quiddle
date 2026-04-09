@@ -96,8 +96,12 @@ jobs:
             VITE_APP_BACKEND_URL: ${{ secrets.VITE_APP_BACKEND_URL }}
             VITE_APP_FRONTEND_URL: ${{ secrets.VITE_APP_FRONTEND_URL }}
 
+        - name: Serve client
+          run: npx serve -s dist -l 3000 &> /tmp/client.log &
+          working-directory: client
+
         - name: Start server
-          run: npm start --prefix server &
+          run: npm start --prefix server &> /tmp/server.log &
           env:
             DATABASE_URL: ${{ secrets.DATABASE_URL }}
             PORT: ${{ secrets.PORT }}
@@ -110,8 +114,11 @@ jobs:
             PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
 
 
-        - name: Wait for server
-          run: npx wait-on http://localhost:${{ secrets.PORT }} --timeout 30000
+        - name: Wait for server and client
+          run: |
+            npx wait-on http://localhost:3001 http://localhost:3000 --timeout 30000 || \
+            (echo "=== SERVER LOG ===" && cat /tmp/server.log && \
+            echo "=== CLIENT LOG ===" && cat /tmp/client.log && exit 1)
 
         - name: Run Selenium tests
           run: python -m pytest tests/ -v
