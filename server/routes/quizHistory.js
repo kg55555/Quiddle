@@ -11,6 +11,18 @@ const authenticate = require('../middleware/authenticate');
 
 const router = express.Router();
 
+/*
+ * Parses the answer value, handling both JSON and non-JSON strings.
+ */
+function parseAnswerValue(value) {
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [String(parsed)];
+    } catch {
+        return [value];
+    }
+}
+
 /**
  * GET /api/quiz-history — fetches a list of quizzes attempted by the authenticated user, including metadata and scores
  * Expected request header: Authorization
@@ -164,7 +176,7 @@ router.get('/attempt/:attemptId', authenticate, async (req, res) => {
 
             // Get the answer text(s)
             const userAnswerText = attemptedAnswers
-                .map(attempt => attempt.answer_value)
+                .flatMap(attempt => parseAnswerValue(attempt.answer_value))
                 .filter(Boolean)
                 .join(', ') || 'Not answered';
 
@@ -175,19 +187,27 @@ router.get('/attempt/:attemptId', authenticate, async (req, res) => {
                 .join(', ');
 
             // Determine if correct by checking if user's answer matches correct answer
-            const isCorrect = attemptedAnswers.length > 0 ? attemptedAnswers[0].is_correct : false;
+            const isCorrect = attemptedAnswers.length > 0
+                ? attemptedAnswers.every(attempt =>
+                    parseAnswerValue(attempt.answer_value).every(val =>
+                        question.answers.some(a =>
+                            a.answer_description === val && a.is_correct
+                        )
+                    )
+                )
+                : false;
 
             // DEBUG: Log to verify
             console.log(`Question ${question.question_id}: isCorrect from DB = ${isCorrect}`);
 
             // DEBUG: Log all values
-            console.log(`\n=== Question ${question.question_id} ===`);
-            console.log(`Question Text: ${question.description}`);
-            console.log(`Attempted Answers:`, attemptedAnswers.map(a => a.answer_value));
-            console.log(`Correct Answers:`, correctAnswers.map(a => a.answer_description));
-            console.log(`User Answer Text: ${userAnswerText}`);
-            console.log(`Correct Answer Text: ${correctAnswerText}`);
-            console.log(`isCorrect: ${isCorrect}`);
+            // console.log(`\n=== Question ${question.question_id} ===`);
+            // console.log(`Question Text: ${question.description}`);
+            // console.log(`Attempted Answers:`, attemptedAnswers.map(a => a.answer_value));
+            // console.log(`Correct Answers:`, correctAnswers.map(a => a.answer_description));
+            // console.log(`User Answer Text: ${userAnswerText}`);
+            // console.log(`Correct Answer Text: ${correctAnswerText}`);
+            // console.log(`isCorrect: ${isCorrect}`);
 
             detailedResults.push({
                 questionId: question.question_id,
