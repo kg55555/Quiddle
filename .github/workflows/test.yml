@@ -86,7 +86,7 @@ jobs:
       environment: quiddlenv
       strategy:
         matrix:
-          branch: [main, dev, test-runner]
+          branch: [main, dev]
         fail-fast: false
 
       steps:
@@ -172,13 +172,14 @@ jobs:
 
   all-tests-pass:
     runs-on: ubuntu-latest
-    needs: [jest, selenium]
+    needs: [vitest, jest, selenium]
     if: always()
     steps:
       - name: Check results
         run: |
           if [ "${{ needs.jest.result }}" != "success" ] || \
-             [ "${{ needs.selenium.result }}" != "success" ]; then
+             [ "${{ needs.selenium.result }}" != "success" ] || \
+             [ "${{ needs.vitest.result }}" != "success" ]; then
             echo "One or more test jobs failed"
             exit 1
           fi
