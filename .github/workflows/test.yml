@@ -90,7 +90,7 @@ jobs:
         - name: Install test deps
           run: pip install -r tests/requirements.txt
 
-        - uses: browser-actions/setup-chrome@v1
+        - uses: browser-actions/setup-chrome@v2
 
         - name: Build client
           run: yarn build
