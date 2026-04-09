@@ -127,8 +127,8 @@ jobs:
           env:
             BASE_URL: ${{ secrets.VITE_APP_FRONTEND_URL }}
             HEADLESS: true
-            QUIDDLE_TEST_USER: ${{ secrets.QUIDDLE_TEST_USER }}
-            QUIDDLE_TEST_PASS: ${{ secrets.QUIDDLE_TEST_PASS }}
+            QUIDDLE_TEST_EMAIL: ${{ secrets.QUIDDLE_TEST_USER }}
+            QUIDDLE_TEST_PASSWORD: ${{ secrets.QUIDDLE_TEST_PASS }}
 
         - uses: actions/upload-artifact@v4
           if: failure()
