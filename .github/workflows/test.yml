@@ -117,10 +117,10 @@ jobs:
             PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
 
         - name: Wait for server and client
-                run: |
-                  wait-on tcp:3001 tcp:3000 --timeout 30000 || \
-                  (echo "=== SERVER LOG ===" && cat /tmp/server.log && \
-                  echo "=== CLIENT LOG ===" && cat /tmp/client.log && exit 1)
+          run: |
+            wait-on tcp:3001 tcp:3000 --timeout 30000 || \
+            (echo "=== SERVER LOG ===" && cat /tmp/server.log && \
+            echo "=== CLIENT LOG ===" && cat /tmp/client.log && exit 1)
 
         - name: Run Selenium tests
           run: python -m pytest tests/ -v
