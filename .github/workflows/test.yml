@@ -2,17 +2,51 @@ name: Tests
 
 on:
   push:
-    branches: [main, dev, test-runner]
+    branches: [main, dev]
   pull_request:
-    branches: [main, dev, test-runner]
+    branches: [main, dev]
 
 jobs:
+  vitest:
+      runs-on: ubuntu-latest
+      environment: quiddlenv
+      strategy:
+        matrix:
+          branch: [main, dev]
+        fail-fast: false
+      defaults:
+        run:
+          working-directory: client
+
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            ref: ${{ matrix.branch }}
+
+        - uses: actions/setup-node@v4
+          with:
+            node-version: 20
+
+        - name: Cache client yarn deps
+          uses: actions/cache@v4
+          with:
+            path: client/.yarn/cache
+            key: yarn-client-${{ matrix.branch }}-${{ hashFiles('client/yarn.lock') }}
+            restore-keys: yarn-client-${{ matrix.branch }}-
+
+        - run: yarn install --frozen-lockfile
+
+        - run: yarn test --run
+          env:
+            VITE_APP_BACKEND_URL: ${{ secrets.VITE_APP_BACKEND_URL }}
+            VITE_APP_FRONTEND_URL: ${{ secrets.VITE_APP_FRONTEND_URL }}
+  
   jest:
     runs-on: ubuntu-latest
     environment: quiddlenv
     strategy:
       matrix:
-        branch: [main, dev, test-runner]
+        branch: [main, dev]
       fail-fast: false
     defaults:
       run:
