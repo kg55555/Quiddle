@@ -1,0 +1,185 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  vitest:
+      runs-on: ubuntu-latest
+      environment: quiddlenv
+      strategy:
+        matrix:
+          branch: [main, dev]
+        fail-fast: false
+      defaults:
+        run:
+          working-directory: client
+
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            ref: ${{ matrix.branch }}
+
+        - uses: actions/setup-node@v4
+          with:
+            node-version: 20
+
+        - name: Cache client yarn deps
+          uses: actions/cache@v4
+          with:
+            path: client/.yarn/cache
+            key: yarn-client-${{ matrix.branch }}-${{ hashFiles('client/yarn.lock') }}
+            restore-keys: yarn-client-${{ matrix.branch }}-
+
+        - run: yarn install --frozen-lockfile
+
+        - run: yarn test --run
+          env:
+            VITE_APP_BACKEND_URL: ${{ secrets.VITE_APP_BACKEND_URL }}
+            VITE_APP_FRONTEND_URL: ${{ secrets.VITE_APP_FRONTEND_URL }}
+  
+  jest:
+    runs-on: ubuntu-latest
+    environment: quiddlenv
+    strategy:
+      matrix:
+        branch: [main, dev]
+      fail-fast: false
+    defaults:
+      run:
+        working-directory: server
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - run: npm test -- --ci --coverage
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PORT: ${{ secrets.PORT }}
+          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          GOOGLE_APP_PASS: ${{ secrets.GOOGLE_APP_PASS }}
+          SMTP_TEST_RECEIVER: ${{ secrets.SMTP_TEST_RECEIVER }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jest-coverage-${{ matrix.branch }}
+          path: server/coverage/
+
+  selenium:
+      runs-on: ubuntu-latest
+      environment: quiddlenv
+      strategy:
+        matrix:
+          branch: [main, dev]
+        fail-fast: false
+
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            ref: ${{ matrix.branch }}
+
+        - uses: actions/setup-node@v4
+          with:
+            node-version: 20
+
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.11'
+            cache: pip
+            cache-dependency-path: tests/requirements.txt
+
+        - name: Cache client yarn deps
+          uses: actions/cache@v4
+          with:
+            path: client/.yarn/cache
+            key: yarn-client-${{ matrix.branch }}-${{ hashFiles('client/yarn.lock') }}
+            restore-keys: yarn-client-${{ matrix.branch }}-
+
+        - name: Install server deps
+          run: npm install --prefix server
+        
+        - name: Install wait-on
+          run: npm install -g wait-on
+
+        - name: Install client deps
+          run: yarn install --frozen-lockfile
+          working-directory: client
+
+        - name: Install test deps
+          run: pip install -r tests/requirements.txt
+
+        - uses: browser-actions/setup-chrome@v2
+
+        - name: Build client
+          run: yarn build
+          working-directory: client
+          env:
+            VITE_APP_BACKEND_URL: ${{ secrets.VITE_APP_BACKEND_URL }}
+            VITE_APP_FRONTEND_URL: ${{ secrets.VITE_APP_FRONTEND_URL }}
+
+        - name: Serve client
+          run: npx serve -s dist -l 3000 &> /tmp/client.log &
+          working-directory: client
+
+        - name: Start server
+          run: npm start --prefix server &> /tmp/server.log &
+          env:
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            PORT: ${{ secrets.PORT }}
+            ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+            FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+            SMTP_USER: ${{ secrets.SMTP_USER }}
+            GOOGLE_APP_PASS: ${{ secrets.GOOGLE_APP_PASS }}
+            SMTP_TEST_RECEIVER: ${{ secrets.SMTP_TEST_RECEIVER }}
+            PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+            PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
+
+        - name: Wait for server and client
+          run: |
+            wait-on tcp:3001 tcp:3000 --timeout 30000 || \
+            (echo "=== SERVER LOG ===" && cat /tmp/server.log && \
+            echo "=== CLIENT LOG ===" && cat /tmp/client.log && exit 1)
+
+        - name: Run Selenium tests
+          run: python -m pytest tests/ -v
+          env:
+            BASE_URL: ${{ secrets.VITE_APP_FRONTEND_URL }}
+            HEADLESS: true
+            QUIDDLE_TEST_EMAIL: ${{ secrets.QUIDDLE_TEST_EMAIL }}
+            QUIDDLE_TEST_PASSWORD: ${{ secrets.QUIDDLE_TEST_PASSWORD }}
+
+        - uses: actions/upload-artifact@v4
+          if: failure()
+          with:
+            name: selenium-screenshots-${{ matrix.branch }}
+            path: tests/screenshots/
+
+  all-tests-pass:
+    runs-on: ubuntu-latest
+    needs: [vitest, jest, selenium]
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.jest.result }}" != "success" ] || \
+             [ "${{ needs.selenium.result }}" != "success" ] || \
+             [ "${{ needs.vitest.result }}" != "success" ]; then
+            echo "One or more test jobs failed"
+            exit 1
+          fi

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ROUTES } from '../utils/paths';
 
 const VerifyEmail: React.FC = () => {
 
@@ -12,7 +13,7 @@ const VerifyEmail: React.FC = () => {
             const validationString = searchParams.get('validationString');
 
             if (!email || !validationString) {
-                navigate('/');
+                navigate(ROUTES.HOME);
                 return;
             }
 
@@ -33,13 +34,13 @@ const VerifyEmail: React.FC = () => {
 
                 if (response.ok) {
                     // Redirect to home after successful verification
-                    navigate('/');
+                    navigate(ROUTES.HOME);
                 } else {
-                    navigate('/');
+                    navigate(ROUTES.HOME);
                 }
             } catch (error) {
                 console.error('Email verification failed:', error);
-                navigate('/');
+                navigate(ROUTES.HOME);
             }
         };
 

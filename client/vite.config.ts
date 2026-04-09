@@ -21,5 +21,10 @@ export default defineConfig(() => {
         hooks: resolve(__dirname, "src", "hooks"),
       },
     },
+    test: {
+      environment: "jsdom",
+      globals: true,
+      setupFiles: "./src/setupTests.ts",
+    },
   };
 });

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ROUTES } from '../utils/paths';
 import Footer from "components/organisms/footer";
 import Header from "components/organisms/header";
 import QuizResults from 'components/organisms/QuizResults';
@@ -57,7 +58,6 @@ function Profile() {
     const [activeTab, setActiveTab] = useState("Profile");
     const [fetchLoading, setFetchLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const navigate = useNavigate();
     const [historyLoading, setHistoryLoading] = useState(false);
     const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
     const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null);
@@ -95,20 +95,20 @@ function Profile() {
 
      // Fetch quiz history when Quiz History tab is clicked
     const handleQuizHistoryTab = async () => {
-    setActiveTab("Quiz History");
+		setActiveTab("Quiz History");
     
-    if (quizHistory.length > 0) return; // Already loaded
+		if (quizHistory.length > 0) return; // Already loaded
 
-    try {
+		try {
 
-        setHistoryLoading(true);
-        const res = await fetch(import.meta.env.VITE_APP_BACKEND_URL + '/api/quiz-history', {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+			setHistoryLoading(true);
+			const res = await fetch(import.meta.env.VITE_APP_BACKEND_URL + '/api/quiz-history', {
+				headers: { Authorization: `Bearer ${token}` }
+			});
 
 
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
+			if (!res.ok) throw new Error('Failed to fetch');
+			const data = await res.json();
 
         setQuizHistory(data.quizHistory);
     } catch (error) {
@@ -130,6 +130,13 @@ function Profile() {
             if (!res.ok) throw new Error('Failed to fetch attempt results');
             
             const data = await res.json();
+
+            //test
+            console.log('Detailed Results:', data.results.detailedResults);
+            data.results.detailedResults.forEach((result: QuestionResult) => {
+                console.log(`Question ${result.questionId}: isCorrect = ${result.isCorrect}`);
+            });
+            
             setSelectedResults(data.results);
             setQuizQuestions(data.questions);
             setSelectedAttemptId(attemptId);
@@ -315,7 +322,7 @@ function Profile() {
                                                                     </td>
                                                                     <td className="p-3  text-gray-800">
                                                                         <Link 
-                                                                            to={`/quiztake/${item.quiz_id}`}
+                                                                            to={`${ROUTES.QUIZTAKE}/${item.quiz_id}`}
                                                                             className="text-blue-500 hover:underline"
                                                                         >   
                                                                             {'Retake'}
@@ -334,7 +341,7 @@ function Profile() {
                                         <div>
                                             <h2 className="text-lg font-bold mb-2">Created Quizzes</h2>
                                             <p className="text-gray-500">
-                                                Manage your quizzes from the <Link to="/hub" className="text-blue-500 underline">Hub</Link>.
+                                                Manage your quizzes from the <Link to={ROUTES.HUB} className="text-blue-500 underline">Hub</Link>.
                                             </p>
                                         </div>
                                     )}

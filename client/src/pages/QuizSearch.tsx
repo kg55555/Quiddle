@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ROUTES } from '../utils/paths';
 import { useSearchParams, Link } from 'react-router-dom';
 import Header from 'components/organisms/header';
 import Footer from 'components/organisms/footer';
@@ -93,13 +94,13 @@ const QuizSearch: React.FC = () => {
 
                                                 {/* Meta info */}
                                                 <div className="flex gap-4 mt-3 text-sm text-gray-500">
-                                                    {quiz.course_name         && <span>Course: {quiz.course_name}</span>}
-                                                    {quiz.created_by_name     && <span>By: {quiz.created_by_name}</span>}
+                                                    {quiz.course_name  && <span>Course: {quiz.course_name}</span>}
+                                                    {quiz.created_by_name && <span>By: {quiz.created_by_name}</span>}
                                                     {quiz.number_of_questions && <span>{quiz.number_of_questions} questions</span>}
                                                 </div>
 
                                                 <Link
-                                                    to={`/quiz/${quiz.quiz_id}`}
+                                                    to={`${ROUTES.QUIZTAKE}/${quiz.quiz_id}`}
                                                     className="inline-block mt-4 bg-purple-500 text-white px-4 py-2 rounded-2xl text-sm hover:bg-purple-600"
                                                 >
                                                     Take Quiz

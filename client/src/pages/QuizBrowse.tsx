@@ -2,12 +2,10 @@ import QuizCard from 'components/molecules/quiz-card';
 import Footer from 'components/organisms/footer';
 import Header from 'components/organisms/header';
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { QuizInfo } from '../types';
 
 const QuizBrowse: React.FC = () => {
 
-    const navigate = useNavigate();
     const [quizzes, setQuizzes] = useState<QuizInfo[]>([]);
     const [quizCategory, setQuizCategory] = useState<string[]>([]);
 
@@ -51,7 +49,7 @@ const QuizBrowse: React.FC = () => {
                                             {quizzes
                                                 .filter((quiz) => quiz.subject_name === category)
                                                 .map((quiz) => (
-                                                    <div className="flex-shrink-0">
+                                                    <div key={quiz.quiz_id} className="flex-shrink-0">
                                                         <QuizCard quiz={quiz} />
                                                     </div>
                                                 ))}

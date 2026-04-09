@@ -1,5 +1,6 @@
 import Footer from 'components/organisms/footer';
 import Header from 'components/organisms/header';
+import { ROUTES } from '../utils/paths';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -15,6 +16,12 @@ type Question = {
     options: string[];
     correctAnswers: number[]; // Stores indices of correct options
 };
+
+type Subject = {
+    subject_id: number;
+    subject_name: string;
+};
+
 const QuizCreate: React.FC<QuizCreateProps> = () => {
 
     const { token } = useAuth(); //token for logging in
@@ -24,9 +31,15 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
 
     const [loading, setLoading] = useState(false);
     const [fetchLoading, setFetchLoading] = useState(isEdit); // true only in edit mode, avoids flash of empty form
-    const [quizName, setQuizName] = useState("");
+    
+	const [quizName, setQuizName] = useState("");
 	const [visibility, setVisibility] = useState<'public' | 'private'>('private');
     const [courseName, setCourseName] = useState("");
+	
+	const [subjects, setSubjects] = useState<Subject[]>([]);
+	const [subjectId, setSubjectId] = useState("");
+	const [subjectOpen, setSubjectOpen] = useState(false);
+	
     const [description, setDescription] = useState("");
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentQuestion, setCurrentQuestion] = useState("");
@@ -34,7 +47,32 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
     const [currentOptions, setCurrentOptions] = useState<string[]>(["", "", "", ""]);
     const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
 
-    // In edit mode, fetch the existing quiz and prefill all form state
+    
+	
+	useEffect(() => {
+    const fetchSubjects = async () => {
+        try {
+            const response = await fetch('/api/quizzes/subjects', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch subjects');
+            }
+
+            const data: Subject[] = await response.json();
+            setSubjects(data);
+        } catch (error) {
+            console.error('Error fetching subjects:', error);
+        }
+    };
+
+    fetchSubjects();
+	}, [token]);
+	
+	
+	
+	// In edit mode, fetch the existing quiz and prefill all form state
     useEffect(() => {
         if (!isEdit) return;
 
@@ -49,6 +87,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                 setQuizName(data.name);
 				setVisibility(data.visibility ?? 'private'); // fetch visibility
                 setCourseName(data.course_name ?? "");
+				setSubjectId(data.subject_id ? String(data.subject_id) : "");
                 setDescription(data.description ?? "");
 
                 // Map API question shape back to local Question type
@@ -65,7 +104,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
             })
             .catch(() => {
                 alert("Failed to load quiz for editing");
-                navigate('/hub'); // Don't leave user on a blank form
+                navigate(ROUTES.HUB); // Don't leave user on a blank form
             })
             .finally(() => setFetchLoading(false));
     }, [quizId, isEdit, token, navigate]);
@@ -195,6 +234,11 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
 			return;
 		}
 		
+		if (!subjectId) {
+			alert("Please select a subject");
+			return;
+		}
+		
         if (questions.length === 0) {
             alert("Please add at least one question");
             return;
@@ -204,6 +248,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
         const payload = {
             name: quizName,
             course_name: courseName,
+			subject_id: Number(subjectId),
             description: description,
 			visibility: visibility,
             questions: questions.map((q) => ({
@@ -237,7 +282,7 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
 			}
 
             // Return to hub after saving — works for both create and edit
-            navigate('/hub');
+            navigate(ROUTES.HUB);
 
         } catch (error: any) {
             alert(error.message || "Something went wrong. Please try again.");
@@ -258,7 +303,36 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
             {label}
         </button>
     );
+	
+	// select dropdown
+	const selectedSubject = subjects.find(
+		(subject) => String(subject.subject_id) === subjectId
+	);
 
+	const subjectLabel = selectedSubject?.subject_name || 'Select subject';
+	
+	let subjectDropdown: React.ReactNode = null;
+	if (subjectOpen) {
+		subjectDropdown = (
+			<div className='absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-300 bg-white shadow'>
+				{subjects.map((subject) => (
+					<button
+						key={subject.subject_id}
+						type="button"
+						onClick={() => {
+							setSubjectId(String(subject.subject_id));
+							setSubjectOpen(false);
+						}}
+						className='block w-full px-3 py-2 text-left hover:bg-gray-100'
+					>
+						{subject.subject_name}
+					</button>
+				))}
+			</div>
+		);
+	}
+	
+	
     return (
         <>
             <Header />
@@ -280,16 +354,36 @@ const QuizCreate: React.FC<QuizCreateProps> = () => {
                     </div>
 
                     {/* Course Name Input — enforces alphanumeric format like MATH101 */}
-                    <div className='mb-6'>
-                        <label className='block text-sm font-semibold mb-2'>Course Name</label>
-                        <input
-                            type="text"
-                            value={courseName}
-                            onChange={(e) => handleCourseNameChange(e.target.value)}
-                            className='w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500'
-                            placeholder="e.g. MATH101"
-                        />
-                    </div>
+					{/* Subject on the right side of course */}
+                    <div className='mb-6 grid grid-cols-1 md:grid-cols-3 gap-4'>
+						<div className='md:col-span-2'>
+							<label className='block text-sm font-semibold mb-2'>Course Name</label>
+							<input
+								type="text"
+								value={courseName}
+								onChange={(e) => handleCourseNameChange(e.target.value)}
+								className='w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500'
+								placeholder="e.g. MATH101"
+							/>
+						</div>
+
+						<div>
+							<div className='relative'>
+								<label className='block text-sm font-semibold mb-2'>Subject</label>
+
+								<button
+									type="button"
+									onClick={() => setSubjectOpen(!subjectOpen)}
+									className='w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 bg-white text-left'
+								>
+									{subjectLabel}
+								</button>
+								
+								{subjectDropdown}
+								
+							</div>
+						</div>
+					</div>
 					
 					{/* Visibility - Public or Private*/}
 					<div className='mb-6'>
