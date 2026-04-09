@@ -112,7 +112,14 @@ jobs:
             SMTP_TEST_RECEIVER: ${{ secrets.SMTP_TEST_RECEIVER }}
             PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
             PUBLIC_KEY: ${{ secrets.PUBLIC_KEY }}
+  
+        - name: Wait for server to start
+          run: sleep 5
 
+        - name: Debug server
+          run: |
+            echo "=== SERVER LOG ===" && cat /tmp/server.log
+            echo "=== OPEN PORTS ===" && ss -tlnp
 
         - name: Wait for server and client
           run: |
@@ -123,7 +130,7 @@ jobs:
         - name: Run Selenium tests
           run: python -m pytest tests/ -v
           env:
-            BASE_URL: http://localhost:${{ secrets.PORT }}
+            BASE_URL: ${{ secrets.VITE_APP_FRONTEND_URL }}
             HEADLESS: true
             QUIDDLE_TEST_USER: ${{ secrets.QUIDDLE_TEST_USER }}
             QUIDDLE_TEST_PASS: ${{ secrets.QUIDDLE_TEST_PASS }}
